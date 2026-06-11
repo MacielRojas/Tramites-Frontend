@@ -1,0 +1,110 @@
+<div class="page-wrapper">
+  <!-- Decorative background -->
+  <div class="bg-decorative">
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+    <div class="circle circle-3"></div>
+  </div>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <!-- Brand header -->
+    <div class="brand-header">
+      <div class="brand-icon">
+        <span class="material-symbols-outlined">filter_vintage</span>
+      </div>
+      <h1 class="brand-name">TramiteFlow</h1>
+      <p class="brand-tagline">Tu santuario digital para la gestión simplificada de trámites y documentos.</p>
+    </div>
+
+    <!-- Login card -->
+    <div class="login-card glass-card">
+      <h2 class="card-title">Bienvenido</h2>
+      <p class="card-subtitle">Ingresa tus datos para continuar</p>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
+        <!-- Error message -->
+        @if (errorMessage()) {
+          <div class="error-banner">
+            <span class="material-symbols-outlined">error</span>
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <!-- Username -->
+        <div class="field-group">
+          <label class="field-label" for="username">Usuario</label>
+          <div class="input-wrapper">
+            <span class="input-icon material-symbols-outlined">person</span>
+            <input
+              id="username"
+              formControlName="username"
+              type="text"
+              class="field-input"
+              placeholder="Nombre de usuario"
+              autocomplete="username"
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="field-group">
+          <label class="field-label" for="password">Contraseña</label>
+          <div class="input-wrapper">
+            <span class="input-icon material-symbols-outlined">lock</span>
+            <input
+              id="password"
+              formControlName="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              class="field-input field-input--padded-right"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+            <button type="button" class="toggle-password" (click)="togglePassword()" aria-label="Mostrar contraseña">
+              <span class="material-symbols-outlined">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember + Forgot -->
+        <div class="form-row">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="remember" class="checkbox-input" />
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-text">Recordarme</span>
+          </label>
+          <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <!-- Submit -->
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="loading() || form.invalid"
+        >
+          @if (loading()) {
+            <span class="material-symbols-outlined spin">progress_activity</span>
+            Iniciando sesión...
+          } @else {
+            Iniciar Sesión
+          }
+        </button>
+      </form>
+
+      <p class="signup-prompt">
+        ¿No tienes una cuenta?
+        <a routerLink="/register" class="signup-link">Solicitar Acceso</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="page-footer">
+    <span>© 2024 TramiteFlow. Todos los derechos reservados.</span>
+    <div class="footer-links">
+      <a href="#">Política de Privacidad</a>
+      <a href="#">Términos de Servicio</a>
+      <a href="#">Ayuda</a>
+    </div>
+  </footer>
+</div>

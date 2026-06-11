@@ -1,0 +1,169 @@
+<div class="page-wrapper">
+  <!-- Decorative background -->
+  <div class="bg-decorative">
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+    <div class="circle circle-3"></div>
+    <div class="circle circle-4"></div>
+  </div>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <!-- Brand header -->
+    <div class="brand-header">
+      <div class="brand-icon">
+        <span class="material-symbols-outlined">auto_fix_high</span>
+      </div>
+      <h1 class="brand-name">TramiteFlow</h1>
+      <p class="brand-tagline">Entra en tu santuario digital</p>
+    </div>
+
+    <!-- Register form (no card border — floats freely) -->
+    <div class="register-card glass-card">
+      @if (errorMessage()) {
+        <div class="error-banner">
+          <span class="material-symbols-outlined">error</span>
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="register-form">
+        <!-- Username -->
+        <div class="field-group">
+          <label class="field-label" for="username">Nombre de Usuario</label>
+          <div class="input-wrapper">
+            <span class="input-icon material-symbols-outlined">person</span>
+            <input
+              id="username"
+              formControlName="username"
+              type="text"
+              class="field-input"
+              placeholder="usuario123"
+              autocomplete="username"
+            />
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="field-group">
+          <label class="field-label" for="email">Correo Electrónico</label>
+          <div class="input-wrapper">
+            <span class="input-icon material-symbols-outlined">mail</span>
+            <input
+              id="email"
+              formControlName="email"
+              type="email"
+              class="field-input"
+              placeholder="hola@tramiteflow.com"
+              autocomplete="email"
+            />
+          </div>
+        </div>
+
+        <!-- Password row (2 columns) -->
+        <div class="password-row">
+          <div class="field-group">
+            <label class="field-label" for="password">Contraseña</label>
+            <div class="input-wrapper">
+              <span class="input-icon material-symbols-outlined">lock</span>
+              <input
+                id="password"
+                formControlName="password"
+                [type]="showPassword() ? 'text' : 'password'"
+                class="field-input field-input--padded-right"
+                placeholder="••••••••"
+                autocomplete="new-password"
+              />
+              <button type="button" class="toggle-password" (click)="showPassword.update(v => !v)">
+                <span class="material-symbols-outlined">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="confirmPassword">Confirmar</label>
+            <div class="input-wrapper">
+              <span class="input-icon material-symbols-outlined">lock</span>
+              <input
+                id="confirmPassword"
+                formControlName="confirmPassword"
+                [type]="showConfirm() ? 'text' : 'password'"
+                class="field-input field-input--padded-right"
+                [class.field-input--error]="passwordMismatch"
+                placeholder="••••••••"
+                autocomplete="new-password"
+              />
+              <button type="button" class="toggle-password" (click)="showConfirm.update(v => !v)">
+                <span class="material-symbols-outlined">{{ showConfirm() ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        @if (passwordMismatch) {
+          <p class="field-error">Las contraseñas no coinciden.</p>
+        }
+
+        <!-- Terms -->
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="terms" class="checkbox-input" />
+          <span class="checkbox-custom"></span>
+          <span class="checkbox-text">
+            Acepto los <a href="#" class="terms-link">Términos de Servicio</a>
+          </span>
+        </label>
+
+        <!-- Submit -->
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="loading() || form.invalid"
+        >
+          @if (loading()) {
+            <span class="material-symbols-outlined spin">progress_activity</span>
+            Creando tu santuario...
+          } @else {
+            Crear mi Santuario
+          }
+        </button>
+      </form>
+
+      <!-- Social login divider -->
+      <div class="divider">
+        <span>o únete con</span>
+      </div>
+
+      <div class="social-buttons">
+        <button type="button" class="btn-social">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M17.64 9.2045c0-.638-.0573-1.2518-.164-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.615z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.54-1.8368.859-3.0477.859-2.344 0-4.3282-1.5836-5.036-3.7109H.9574v2.3318C2.4382 15.9832 5.4818 18 9 18z" fill="#34A853"/>
+            <path d="M3.964 10.71C3.7841 10.17 3.6818 9.5936 3.6818 9s.1023-1.17.2822-1.71V4.9582H.9574C.3477 6.1731 0 7.5477 0 9c0 1.4523.3477 2.8268.9574 4.0418L3.964 10.71z" fill="#FBBC05"/>
+            <path d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4627.8918 11.4254 0 9 0 5.4818 0 2.4382 2.0168.9574 4.9582L3.964 7.29C4.6718 5.1627 6.656 3.5795 9 3.5795z" fill="#EA4335"/>
+          </svg>
+          Google
+        </button>
+        <button type="button" class="btn-social">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M12.337 0c.054.638-.19 1.28-.568 1.75-.39.487-.995.872-1.614.82-.07-.62.194-1.27.553-1.732C11.1.358 11.76 0 12.337 0zm1.793 9.47c.028 2.003 1.77 2.668 1.8 2.681-.015.05-.282.965-1.013 1.912-.595.8-1.213 1.59-2.093 1.608-.861.018-1.14-.51-2.128-.51-1 0-1.308.494-2.124.528-.852.034-1.56-.858-2.166-1.654C4.944 12.27 3.97 9.618 4.9 7.67c.46-.96 1.33-1.567 2.253-1.584.84-.016 1.635.567 2.154.567.52 0 1.49-.7 2.512-.596.428.018 1.63.173 2.4 1.302-.062.038-1.092.638-1.089 1.91z"/>
+          </svg>
+          Apple
+        </button>
+      </div>
+
+      <p class="login-prompt">
+        ¿Ya eres miembro?
+        <a routerLink="/login" class="login-link">Inicia Sesión</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="page-footer">
+    <span>© 2024 TramiteFlow Santuario Digital. Todos los derechos reservados.</span>
+    <div class="footer-links">
+      <a href="#">Política de Privacidad</a>
+      <a href="#">Términos de Servicio</a>
+    </div>
+  </footer>
+</div>

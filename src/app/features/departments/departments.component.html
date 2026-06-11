@@ -1,0 +1,258 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <p class="breadcrumb">ADMIN DASHBOARD &rsaquo; DEPARTAMENTOS</p>
+      <h1 class="page-title">Organización</h1>
+      <p class="page-subtitle">Gestiona las áreas operativas, sus líderes y equipos en un entorno centralizado y fluido.</p>
+    </div>
+    <button class="btn-primary" (click)="openNew()">
+      <span class="material-symbols-outlined">add</span>
+      Nuevo Departamento
+    </button>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    @for (stat of stats; track stat.label) {
+      <div class="stat-card glass-card">
+        <div class="stat-icon-wrap">
+          <span class="material-symbols-outlined stat-icon">{{ stat.icon }}</span>
+        </div>
+        <div>
+          <p class="stat-label">{{ stat.label }}</p>
+          <p class="stat-value">{{ stat.value }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Departments grid -->
+  <div class="departments-grid">
+    @for (dept of deptsList(); track dept.id) {
+      <div class="dept-card glass-card" (click)="openDetail(dept)">
+        <div class="dept-card-top-actions">
+          <button class="icon-sm-btn" (click)="openDetail(dept); $event.stopPropagation()" title="Ver detalles">
+            <span class="material-symbols-outlined">info</span>
+          </button>
+          <button class="icon-sm-btn icon-sm-btn--danger" (click)="deleteDept(dept.id, $event)" title="Eliminar">
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+        </div>
+
+        <div class="dept-icon-wrap">
+          <span class="material-symbols-outlined dept-icon">{{ dept.icon }}</span>
+        </div>
+
+        <h3 class="dept-name">{{ dept.name }}</h3>
+        <p class="dept-desc">{{ dept.description }}</p>
+
+        @if (dept.activeProjects && dept.activeProjects.length > 0) {
+          <div class="projects-section">
+            <p class="projects-label">
+              <span class="material-symbols-outlined">rocket_launch</span>
+              Proyectos Activos
+            </p>
+            <div class="projects-list">
+              @for (proj of dept.activeProjects; track proj.name) {
+                <div class="project-row">
+                  <span class="proj-name">{{ proj.name }}</span>
+                  @if (proj.status === 'planning') {
+                    <span class="status-chip status-chip--planning">{{ statusLabel(proj.status) }}</span>
+                  } @else {
+                    <span class="proj-pct">{{ proj.progress }}%</span>
+                  }
+                </div>
+                @if (proj.status !== 'planning') {
+                  <div class="prog-bar">
+                    <div class="prog-fill" [style.width.%]="proj.progress"></div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+
+        <div class="dept-leader">
+          <div class="leader-avatar" [style.background]="dept.leaderColor">{{ dept.leaderInitials }}</div>
+          <div class="leader-info">
+            <p class="leader-name">{{ dept.leaderName }}</p>
+            <p class="leader-role">{{ dept.leaderRole }} · {{ dept.memberCount }} Miembros</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Create new card -->
+    <div class="dept-card dept-card--new glass-card" (click)="openNew()">
+      <div class="new-card-inner">
+        <div class="new-icon-wrap">
+          <span class="material-symbols-outlined">add</span>
+        </div>
+        <p class="new-title">Crear Departamento</p>
+        <p class="new-sub">Añade una nueva unidad de negocio a la estructura jerárquica.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo Departamento ═══════════════ -->
+@if (showNewModal()) {
+  <div class="modal-overlay" (click)="showNewModal.set(false)">
+    <div class="modal glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap">
+            <span class="material-symbols-outlined">apartment</span>
+          </div>
+          <div>
+            <h2 class="modal-title">Nuevo Departamento</h2>
+            <p class="modal-sub">Define la estructura y el líder del área</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="showNewModal.set(false)">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Nombre del departamento *</label>
+            <input type="text" [(ngModel)]="newForm.name" placeholder="Ej: Marketing Digital" />
+          </div>
+          <div class="form-field">
+            <label>Ícono</label>
+            <select [(ngModel)]="newForm.icon">
+              @for (ic of availableIcons; track ic) {
+                <option [value]="ic">{{ ic }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="form-field form-field--full">
+          <label>Descripción</label>
+          <textarea rows="2" [(ngModel)]="newForm.description" placeholder="Descripción breve del área..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Nombre del líder *</label>
+            <input type="text" [(ngModel)]="newForm.leaderName" placeholder="Ej: Ana Torres" />
+          </div>
+          <div class="form-field">
+            <label>Rol del líder</label>
+            <input type="text" [(ngModel)]="newForm.leaderRole" placeholder="Ej: Directora de Área" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Nº de miembros</label>
+            <input type="number" min="1" [(ngModel)]="newForm.memberCount" placeholder="0" />
+          </div>
+          <div class="form-field">
+            <label>Sede / Ubicación</label>
+            <input type="text" [(ngModel)]="newForm.location" placeholder="Ej: Sede Central" />
+          </div>
+        </div>
+        <div class="form-field form-field--full">
+          <label>Email de contacto</label>
+          <input type="email" [(ngModel)]="newForm.email" placeholder="dept@tramiteflow.com" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showNewModal.set(false)">Cancelar</button>
+        <button class="btn-confirm" (click)="submitNew()" [disabled]="!newForm.name?.trim() || !newForm.leaderName?.trim()">
+          <span class="material-symbols-outlined">add</span>
+          Crear Departamento
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════ PANEL: Detalle del Departamento ═══════════════ -->
+@if (showDetailModal() && selectedDept()) {
+  <div class="modal-overlay" (click)="showDetailModal.set(false)">
+    <div class="detail-panel glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap">
+            <span class="material-symbols-outlined">{{ selectedDept()!.icon }}</span>
+          </div>
+          <div>
+            <h2 class="modal-title">{{ selectedDept()!.name }}</h2>
+            <p class="modal-sub">{{ selectedDept()!.memberCount }} miembros</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="showDetailModal.set(false)">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="detail-body">
+        <p class="detail-desc">{{ selectedDept()!.description }}</p>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <p class="detail-label">Líder</p>
+            <div class="detail-leader-cell">
+              <div class="leader-avatar" [style.background]="selectedDept()!.leaderColor">{{ selectedDept()!.leaderInitials }}</div>
+              <div>
+                <p class="detail-val">{{ selectedDept()!.leaderName }}</p>
+                <p class="detail-sub-val">{{ selectedDept()!.leaderRole }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="detail-item">
+            <p class="detail-label">Miembros</p>
+            <p class="detail-val">{{ selectedDept()!.memberCount }}</p>
+          </div>
+          @if (selectedDept()!.location) {
+            <div class="detail-item">
+              <p class="detail-label">Sede</p>
+              <p class="detail-val">{{ selectedDept()!.location }}</p>
+            </div>
+          }
+          @if (selectedDept()!.email) {
+            <div class="detail-item">
+              <p class="detail-label">Email</p>
+              <p class="detail-val detail-val--link">{{ selectedDept()!.email }}</p>
+            </div>
+          }
+        </div>
+
+        @if (selectedDept()!.activeProjects && selectedDept()!.activeProjects!.length > 0) {
+          <div class="detail-section">
+            <p class="detail-label">Proyectos activos</p>
+            <div class="projects-list detail-projects">
+              @for (proj of selectedDept()!.activeProjects!; track proj.name) {
+                <div>
+                  <div class="project-row">
+                    <span class="proj-name">{{ proj.name }}</span>
+                    @if (proj.status === 'planning') {
+                      <span class="status-chip status-chip--planning">{{ statusLabel(proj.status) }}</span>
+                    } @else {
+                      <span class="proj-pct">{{ proj.progress }}%</span>
+                    }
+                  </div>
+                  @if (proj.status !== 'planning') {
+                    <div class="prog-bar">
+                      <div class="prog-fill" [style.width.%]="proj.progress"></div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showDetailModal.set(false)">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

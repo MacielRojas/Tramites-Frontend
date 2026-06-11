@@ -1,0 +1,302 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Explorador de Archivos</h1>
+      <p class="page-subtitle">Gestiona y organiza tus documentos con seguridad.</p>
+    </div>
+    <div class="header-actions">
+      <div class="view-toggle glass-card">
+        <button class="view-btn" [class.view-btn--active]="viewMode() === 'grid'" (click)="viewMode.set('grid')">
+          <span class="material-symbols-outlined">grid_view</span>
+        </button>
+        <button class="view-btn" [class.view-btn--active]="viewMode() === 'list'" (click)="viewMode.set('list')">
+          <span class="material-symbols-outlined">view_list</span>
+        </button>
+      </div>
+      <button class="btn-primary" (click)="triggerUpload()">
+        <span class="material-symbols-outlined">upload</span>
+        Subir Documento
+      </button>
+    </div>
+  </div>
+
+  <!-- Categories grid -->
+  <div class="categories-grid">
+    @for (cat of categories; track cat.id) {
+      <div class="category-card glass-card">
+        <div class="cat-menu-btn">
+          <span class="material-symbols-outlined">more_horiz</span>
+        </div>
+        <div class="cat-icon-wrap" [style.background]="cat.color + '18'">
+          <span class="material-symbols-outlined cat-icon" [style.color]="cat.color">{{ cat.icon }}</span>
+        </div>
+        <p class="cat-label">{{ cat.label }}</p>
+        <p class="cat-meta">{{ cat.count }} Archivos · {{ cat.size }}</p>
+      </div>
+    }
+  </div>
+
+  <!-- Recent files -->
+  <div class="section glass-card">
+    <div class="section-header">
+      <h2 class="section-title">Archivos Recientes</h2>
+      <button class="link-btn">Ver todos</button>
+    </div>
+
+    <table class="files-table">
+      <thead>
+        <tr>
+          <th>NOMBRE</th>
+          <th>PROPIETARIO</th>
+          <th>ÚLTIMA MODIFICACIÓN</th>
+          <th>TAMAÑO</th>
+          <th>ACCIONES</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (file of filesList(); track file.id) {
+          <tr class="file-row">
+            <td>
+              <div class="file-name-cell">
+                <div class="file-icon-wrap" [style.background]="file.iconColor + '18'">
+                  <span class="material-symbols-outlined file-icon" [style.color]="file.iconColor">{{ file.icon }}</span>
+                </div>
+                <div>
+                  <p class="file-name">{{ file.name }}</p>
+                  <p class="file-cat">{{ file.category }}</p>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="owner-cell">
+                <div class="owner-avatar" [style.background]="file.ownerColor">{{ file.ownerInitials }}</div>
+                <span class="owner-name">{{ file.owner }}</span>
+              </div>
+            </td>
+            <td class="modified-cell">{{ file.modified }}</td>
+            <td class="size-cell">{{ file.size }}</td>
+            <td>
+              <div class="action-btns">
+                <button class="icon-action-btn" title="Descargar" (click)="downloadFile(file)">
+                  <span class="material-symbols-outlined">download</span>
+                </button>
+                <button class="icon-action-btn" title="Compartir" (click)="openShare(file)">
+                  <span class="material-symbols-outlined">share</span>
+                </button>
+                <button class="icon-action-btn" title="Editar" (click)="openEdit(file)">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button class="icon-action-btn icon-action-btn--danger" title="Eliminar" (click)="askDelete(file.id)">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Hidden file input -->
+<input #fileInput type="file" style="display:none" (change)="onFileSelected($event)" />
+
+<!-- ═══════════════ MODAL: Subir Documento ═══════════════ -->
+@if (showUploadModal()) {
+  <div class="modal-overlay" (click)="showUploadModal.set(false)">
+    <div class="modal glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap">
+            <span class="material-symbols-outlined">upload_file</span>
+          </div>
+          <div>
+            <h2 class="modal-title">Subir Documento</h2>
+            <p class="modal-sub">Selecciona o arrastra el archivo a subir</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="showUploadModal.set(false)">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Drop zone -->
+        <div class="drop-zone" (click)="fileInputRef.nativeElement.click()">
+          <span class="material-symbols-outlined drop-icon">cloud_upload</span>
+          <p class="drop-text">
+            @if (uploadForm.selectedFile) {
+              <strong>{{ uploadForm.selectedFile.name }}</strong>
+            } @else {
+              Haz clic o arrastra un archivo aquí
+            }
+          </p>
+          <p class="drop-hint">PDF, DOCX, JPG, PNG — máx. 50 MB</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label>Nombre del archivo *</label>
+            <input type="text" [(ngModel)]="uploadForm.name" placeholder="nombre_archivo.pdf" />
+          </div>
+          <div class="form-field">
+            <label>Categoría</label>
+            <select [(ngModel)]="uploadForm.category">
+              @for (cat of categoryOptions; track cat) {
+                <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Propietario</label>
+            <input type="text" [(ngModel)]="uploadForm.owner" placeholder="Tu nombre" />
+          </div>
+          <div class="form-field">
+            <label>Tamaño</label>
+            <input type="text" [(ngModel)]="uploadForm.size" placeholder="Ej: 1.2 MB" [readonly]="!!uploadForm.selectedFile" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showUploadModal.set(false)">Cancelar</button>
+        <button class="btn-confirm" (click)="submitUpload()" [disabled]="!uploadForm.name.trim()">
+          <span class="material-symbols-outlined">upload</span>
+          Subir
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════ MODAL: Editar Documento ═══════════════ -->
+@if (showEditModal()) {
+  <div class="modal-overlay" (click)="showEditModal.set(false)">
+    <div class="modal glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap">
+            <span class="material-symbols-outlined">edit_document</span>
+          </div>
+          <div>
+            <h2 class="modal-title">Editar Documento</h2>
+            <p class="modal-sub">Modifica los metadatos del archivo</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="showEditModal.set(false)">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Nombre *</label>
+            <input type="text" [(ngModel)]="editForm.name" placeholder="nombre_archivo.pdf" />
+          </div>
+          <div class="form-field">
+            <label>Categoría</label>
+            <select [(ngModel)]="editForm.category">
+              @for (cat of categoryOptions; track cat) {
+                <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Propietario</label>
+            <input type="text" [(ngModel)]="editForm.owner" placeholder="Nombre del propietario" />
+          </div>
+          <div class="form-field">
+            <label>Tamaño</label>
+            <input type="text" [(ngModel)]="editForm.size" placeholder="Ej: 2.5 MB" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showEditModal.set(false)">Cancelar</button>
+        <button class="btn-confirm" (click)="submitEdit()" [disabled]="!editForm.name?.trim()">
+          <span class="material-symbols-outlined">save</span>
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════ MODAL: Compartir ═══════════════ -->
+@if (showShareModal() && selectedFile()) {
+  <div class="modal-overlay" (click)="showShareModal.set(false)">
+    <div class="modal modal--sm glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap">
+            <span class="material-symbols-outlined">share</span>
+          </div>
+          <div>
+            <h2 class="modal-title">Compartir archivo</h2>
+            <p class="modal-sub">{{ selectedFile()!.name }}</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="showShareModal.set(false)">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="share-label">Enlace de acceso</p>
+        <div class="share-link-row">
+          <span class="share-link-text">tramiteflow.app/doc/{{ selectedFile()!.id }}</span>
+          <button class="btn-copy" (click)="copyShareLink()" [class.btn-copy--done]="shareCopied()">
+            <span class="material-symbols-outlined">{{ shareCopied() ? 'check' : 'content_copy' }}</span>
+            {{ shareCopied() ? 'Copiado' : 'Copiar' }}
+          </button>
+        </div>
+        <p class="share-hint">Cualquiera con este enlace podrá ver el documento.</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showShareModal.set(false)">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════ CONFIRM: Eliminar ═══════════════ -->
+@if (showDeleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal modal--sm glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap modal-icon-wrap--danger">
+            <span class="material-symbols-outlined">delete_forever</span>
+          </div>
+          <div>
+            <h2 class="modal-title">Eliminar documento</h2>
+            <p class="modal-sub">Esta acción no se puede deshacer</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-text">
+          ¿Estás seguro de que quieres eliminar
+          <strong>{{ fileToDelete(showDeleteConfirm())?.name }}</strong>?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cancelDelete()">Cancelar</button>
+        <button class="btn-danger" (click)="confirmDelete()">
+          <span class="material-symbols-outlined">delete</span>
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+}

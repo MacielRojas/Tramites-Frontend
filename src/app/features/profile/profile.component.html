@@ -1,0 +1,162 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1 class="page-title">Mi Perfil</h1>
+    <p class="page-subtitle">Actualiza tus datos personales y preferencias de seguridad.</p>
+  </div>
+
+  <div class="profile-grid">
+
+    <!-- Left: avatar + info card -->
+    <div class="profile-side">
+      <div class="avatar-card glass-card">
+        <div class="big-avatar">{{ initials }}</div>
+        <p class="profile-username">{{ profileForm().username }}</p>
+        <p class="profile-email-display">{{ profileForm().email }}</p>
+        <span class="role-badge">{{ roleLabel }}</span>
+      </div>
+    </div>
+
+    <!-- Right: form -->
+    <div class="profile-main">
+
+      <!-- Personal info -->
+      <div class="section-card glass-card">
+        <div class="section-card-header">
+          <div class="section-icon-wrap">
+            <span class="material-symbols-outlined">person</span>
+          </div>
+          <div>
+            <h3 class="section-card-title">Información Personal</h3>
+            <p class="section-card-sub">Actualiza tu nombre y datos de contacto</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Nombre de usuario</label>
+            <input type="text" [value]="profileForm().username"
+                   (input)="updateField('username', $any($event.target).value)" />
+          </div>
+          <div class="form-field">
+            <label>Email</label>
+            <input type="email" [value]="profileForm().email"
+                   (input)="updateField('email', $any($event.target).value)" />
+          </div>
+          <div class="form-field">
+            <label>Nombre completo</label>
+            <input type="text" [value]="profileForm().fullName"
+                   (input)="updateField('fullName', $any($event.target).value)"
+                   placeholder="Tu nombre y apellido" />
+          </div>
+          <div class="form-field">
+            <label>Teléfono</label>
+            <input type="tel" [value]="profileForm().phone"
+                   (input)="updateField('phone', $any($event.target).value)"
+                   placeholder="+34 600 000 000" />
+          </div>
+          <div class="form-field">
+            <label>Cargo / Posición</label>
+            <input type="text" [value]="profileForm().position"
+                   (input)="updateField('position', $any($event.target).value)"
+                   placeholder="Ej: Asesor Legal" />
+          </div>
+          <div class="form-field">
+            <label>Departamento</label>
+            <input type="text" [value]="profileForm().department"
+                   (input)="updateField('department', $any($event.target).value)"
+                   placeholder="Ej: Finanzas" />
+          </div>
+          <div class="form-field form-field--full">
+            <label>Biografía / Nota</label>
+            <textarea rows="3" [value]="profileForm().bio"
+                      (input)="updateField('bio', $any($event.target).value)"
+                      placeholder="Breve descripción sobre ti…"></textarea>
+          </div>
+        </div>
+
+        <div class="section-footer">
+          @if (saveSuccess()) {
+            <span class="success-msg">
+              <span class="material-symbols-outlined">check_circle</span>
+              Perfil guardado correctamente
+            </span>
+          }
+          <button class="btn-primary" (click)="saveProfile()">
+            <span class="material-symbols-outlined">save</span>
+            Guardar Cambios
+          </button>
+        </div>
+      </div>
+
+      <!-- Change password -->
+      <div class="section-card glass-card">
+        <div class="section-card-header">
+          <div class="section-icon-wrap section-icon-wrap--sec">
+            <span class="material-symbols-outlined">lock</span>
+          </div>
+          <div>
+            <h3 class="section-card-title">Seguridad</h3>
+            <p class="section-card-sub">Cambia tu contraseña de acceso</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field form-field--full">
+            <label>Contraseña actual</label>
+            <div class="pw-wrap">
+              <input [type]="showPwCurrent() ? 'text' : 'password'"
+                     [value]="pwForm().current"
+                     (input)="updatePwField('current', $any($event.target).value)"
+                     placeholder="Tu contraseña actual" />
+              <button class="pw-toggle" (click)="showPwCurrent.update(v => !v)">
+                <span class="material-symbols-outlined">{{ showPwCurrent() ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+          </div>
+          <div class="form-field">
+            <label>Nueva contraseña</label>
+            <div class="pw-wrap">
+              <input [type]="showPwNext() ? 'text' : 'password'"
+                     [value]="pwForm().next"
+                     (input)="updatePwField('next', $any($event.target).value)"
+                     placeholder="Mínimo 6 caracteres" />
+              <button class="pw-toggle" (click)="showPwNext.update(v => !v)">
+                <span class="material-symbols-outlined">{{ showPwNext() ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+          </div>
+          <div class="form-field">
+            <label>Confirmar contraseña</label>
+            <input type="password"
+                   [value]="pwForm().confirm"
+                   (input)="updatePwField('confirm', $any($event.target).value)"
+                   placeholder="Repite la nueva contraseña" />
+          </div>
+        </div>
+
+        <div class="section-footer">
+          @if (pwError()) {
+            <span class="error-msg">
+              <span class="material-symbols-outlined">error</span>
+              {{ pwError() }}
+            </span>
+          }
+          @if (pwSuccess()) {
+            <span class="success-msg">
+              <span class="material-symbols-outlined">check_circle</span>
+              Contraseña actualizada correctamente
+            </span>
+          }
+          <button class="btn-primary" (click)="savePassword()">
+            <span class="material-symbols-outlined">lock_reset</span>
+            Cambiar Contraseña
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

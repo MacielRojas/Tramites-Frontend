@@ -1,0 +1,66 @@
+<div class="layout">
+  <div class="bg-decorative">
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar glass-card">
+    <div class="sidebar-brand">
+      <h1 class="brand-name">TramiteFlow</h1>
+      <p class="brand-sub">Portal de Gestión</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.id) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="nav-item--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-item"
+        >
+          <span class="material-symbols-outlined nav-icon">{{ item.icon }}</span>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="user-card glass-card">
+        <div class="user-avatar">{{ userInitials }}</div>
+        <div class="user-info">
+          <p class="user-name">{{ currentUser?.username ?? 'Usuario' }}</p>
+          <p class="user-role">{{ userRole }}</p>
+        </div>
+        <button class="btn-logout" (click)="logout()" title="Cerrar sesión">
+          <span class="material-symbols-outlined">logout</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main area -->
+  <div class="main-area">
+    <header class="topbar glass-card">
+      <div class="search-wrapper">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" class="search-input" [placeholder]="searchPlaceholder" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" aria-label="Notificaciones">
+          <span class="material-symbols-outlined">notifications</span>
+        </button>
+        <button class="icon-btn" aria-label="Ayuda">
+          <span class="material-symbols-outlined">help_outline</span>
+        </button>
+        <div class="topbar-divider"></div>
+        <button class="profile-btn" [routerLink]="'/perfil'">
+          <span class="profile-label">Perfil</span>
+          <div class="profile-avatar">{{ userInitials }}</div>
+        </button>
+      </div>
+    </header>
+
+    <router-outlet />
+  </div>
+</div>

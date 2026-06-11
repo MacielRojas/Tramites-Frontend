@@ -1,0 +1,194 @@
+<div class="page-content">
+  <!-- Hero header -->
+  <section class="hero">
+    <div class="hero-text">
+      <h2 class="page-title">Digital Sanctuary Dashboard</h2>
+      <p class="page-subtitle">Bienvenido de nuevo. Aquí tienes un resumen de tu flujo de gestión.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="btn-secondary" (click)="exportReport()">
+        <span class="material-symbols-outlined">download</span>
+        Exportar Reporte
+      </button>
+      <button class="btn-primary" (click)="openNewTramite()">
+        <span class="material-symbols-outlined">add</span>
+        Nuevo Trámite
+      </button>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats-grid">
+    <div class="stat-card glass-card">
+      <div class="stat-header">
+        <div class="stat-icon stat-icon--primary">
+          <span class="material-symbols-outlined">assignment</span>
+        </div>
+        <span class="stat-badge stat-badge--success">+12.5%</span>
+      </div>
+      <p class="stat-label">Total Trámites</p>
+      <h3 class="stat-value">2,842</h3>
+    </div>
+
+    <div class="stat-card glass-card">
+      <div class="stat-header">
+        <div class="stat-icon stat-icon--secondary">
+          <span class="material-symbols-outlined">group</span>
+        </div>
+        <span class="stat-badge stat-badge--success">+4.2%</span>
+      </div>
+      <p class="stat-label">Usuarios Activos</p>
+      <h3 class="stat-value">1,120</h3>
+    </div>
+
+    <div class="stat-card glass-card">
+      <div class="stat-header">
+        <div class="stat-icon stat-icon--error">
+          <span class="material-symbols-outlined">pending_actions</span>
+        </div>
+        <span class="stat-badge stat-badge--error">-2.1%</span>
+      </div>
+      <p class="stat-label">Tareas Pendientes</p>
+      <h3 class="stat-value">45</h3>
+    </div>
+  </section>
+
+  <!-- Main grid -->
+  <section class="main-grid">
+    <!-- Recent activity table -->
+    <div class="table-card glass-card">
+      <div class="table-header">
+        <h4 class="card-title">Actividad Reciente</h4>
+        <button class="link-btn" (click)="go('/tramites')">Ver Todo</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Ingreso</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of recentUsers; track user.name) {
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <div class="table-avatar">{{ user.initials }}</div>
+                    <span class="user-cell-name">{{ user.name }}</span>
+                  </div>
+                </td>
+                <td class="td-secondary">{{ user.role }}</td>
+                <td>
+                  <span class="status-chip" [class]="'status-chip--' + user.status">
+                    {{ user.status | titlecase }}
+                  </span>
+                </td>
+                <td class="td-secondary">{{ user.date }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="right-col">
+      <div class="promo-card glass-card">
+        <div class="promo-overlay">
+          <h5 class="promo-title">Visión del Espacio de Trabajo</h5>
+          <p class="promo-desc">Visualizando la armonía de tu flujo de trabajo mediante analíticas profundas.</p>
+        </div>
+      </div>
+
+      <div class="quick-card glass-card">
+        <h4 class="card-title">Acceso Rápido</h4>
+        <div class="quick-grid">
+          <button class="quick-btn glass-card" (click)="go('/documentos')">
+            <span class="material-symbols-outlined">folder_zip</span>
+            <span>Archivos</span>
+          </button>
+          <button class="quick-btn glass-card" (click)="go('/tramites')">
+            <span class="material-symbols-outlined">verified_user</span>
+            <span>Verificar</span>
+          </button>
+          <button class="quick-btn glass-card" (click)="go('/tramites')">
+            <span class="material-symbols-outlined">mail</span>
+            <span>Cola</span>
+          </button>
+          <button class="quick-btn glass-card" (click)="go('/analitica')">
+            <span class="material-symbols-outlined">history</span>
+            <span>Historial</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  @if (showNewTramiteModal()) {
+    <div class="modal-overlay" (click)="showNewTramiteModal.set(false)">
+      <div class="modal glass-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-icon-wrap"><span class="material-symbols-outlined">add_circle</span></div>
+            <div>
+              <h2 class="modal-title">Nuevo Trámite</h2>
+              <p class="modal-sub">Registra un expediente rápidamente</p>
+            </div>
+          </div>
+          <button class="modal-close" (click)="showNewTramiteModal.set(false)">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-field">
+              <label>Nombre del trámite *</label>
+              <input type="text" [(ngModel)]="newTramiteForm.name" placeholder="Ej: Licencia de Apertura" />
+            </div>
+            <div class="form-field">
+              <label>Cliente</label>
+              <input type="text" [(ngModel)]="newTramiteForm.client" placeholder="Nombre del cliente" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Estado</label>
+              <select [(ngModel)]="newTramiteForm.status">
+                <option value="Pendiente">Pendiente</option>
+                <option value="En Proceso">En Proceso</option>
+                <option value="Completado">Completado</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Prioridad</label>
+              <select [(ngModel)]="newTramiteForm.priority">
+                <option value="Alta">Alta</option>
+                <option value="Media">Media</option>
+                <option value="Baja">Baja</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="showNewTramiteModal.set(false)">Cancelar</button>
+          <button class="btn-confirm" (click)="submitNewTramite()" [disabled]="!newTramiteForm.name.trim()">
+            <span class="material-symbols-outlined">add</span>Crear Trámite
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <footer class="page-footer">
+    <span class="footer-brand">TramiteFlow</span>
+    <span class="footer-copy">© 2024 TramiteFlow Digital Sanctuary. Todos los derechos reservados.</span>
+    <div class="footer-links">
+      <a href="#">Política de Privacidad</a>
+      <a href="#">Términos de Servicio</a>
+      <a href="#">Centro de Ayuda</a>
+    </div>
+  </footer>
+</div>

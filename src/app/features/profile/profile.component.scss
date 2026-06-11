@@ -1,0 +1,110 @@
+.page-wrapper { padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 1.75rem; }
+
+.page-header { }
+.page-title  { font-size: 1.75rem; font-weight: 800; color: var(--on-surface); line-height: 1.2; }
+.page-subtitle { font-size: 0.875rem; color: var(--on-surface-variant); margin-top: 0.25rem; opacity: 0.7; }
+
+/* ---- Layout ---- */
+.profile-grid {
+  display: grid; grid-template-columns: 240px 1fr; gap: 1.5rem; align-items: start;
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+/* ---- Avatar card ---- */
+.avatar-card {
+  border-radius: 20px; padding: 2rem 1.5rem;
+  display: flex; flex-direction: column; align-items: center; gap: 0.625rem; text-align: center;
+}
+
+.big-avatar {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #c4748a);
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 800; letter-spacing: 0.02em;
+  box-shadow: 0 6px 20px rgba(139,75,90,0.3);
+}
+
+.profile-username { font-size: 15px; font-weight: 700; color: var(--on-surface); }
+.profile-email-display { font-size: 12px; color: var(--on-surface-variant); opacity: 0.65; }
+
+.role-badge {
+  padding: 0.25rem 0.875rem; border-radius: 9999px;
+  background: rgba(139,75,90,0.12); color: var(--primary);
+  font-size: 11.5px; font-weight: 700; margin-top: 0.25rem;
+}
+
+/* ---- Main column ---- */
+.profile-main { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ---- Section cards ---- */
+.section-card { border-radius: 20px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+.section-card-header { display: flex; align-items: center; gap: 0.875rem; }
+
+.section-icon-wrap {
+  width: 42px; height: 42px; border-radius: 13px; background: rgba(139,75,90,0.1);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  .material-symbols-outlined { font-size: 22px; color: var(--primary); }
+  &--sec { background: rgba(46,125,140,0.1); .material-symbols-outlined { color: #2e7d8c; } }
+}
+
+.section-card-title { font-size: 15px; font-weight: 700; color: var(--on-surface); }
+.section-card-sub   { font-size: 12px; color: var(--on-surface-variant); opacity: 0.6; margin-top: 1px; }
+
+/* ---- Form ---- */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.875rem; }
+.form-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.form-field--full { grid-column: 1 / -1; }
+
+.form-field label { font-size: 11.5px; font-weight: 700; color: var(--on-surface-variant); opacity: 0.65; }
+
+.form-field input,
+.form-field textarea {
+  padding: 0.5rem 0.75rem; border-radius: 10px;
+  border: 1px solid rgba(200,180,185,0.4); background: rgba(255,255,255,0.55);
+  font-family: var(--font-sans); font-size: 13px; color: var(--on-surface);
+  outline: none; resize: vertical; transition: border-color 0.2s, background 0.2s;
+  &:focus { border-color: var(--primary); background: rgba(255,255,255,0.85); }
+}
+
+/* ---- Password input with toggle ---- */
+.pw-wrap {
+  position: relative;
+  input { width: 100%; box-sizing: border-box; padding-right: 2.5rem; }
+}
+
+.pw-toggle {
+  position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border: none; background: none; cursor: pointer;
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  color: var(--on-surface-variant); transition: background 0.15s;
+  .material-symbols-outlined { font-size: 17px; }
+  &:hover { background: rgba(255,255,255,0.5); }
+}
+
+/* ---- Section footer ---- */
+.section-footer {
+  display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem;
+  padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.35); flex-wrap: wrap;
+}
+
+.success-msg {
+  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 12.5px; font-weight: 600; color: #2e7d4f;
+  .material-symbols-outlined { font-size: 16px; }
+}
+
+.error-msg {
+  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 12.5px; font-weight: 600; color: var(--error);
+  .material-symbols-outlined { font-size: 16px; }
+}
+
+.btn-primary {
+  display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.1rem;
+  border: none; border-radius: 12px; background: var(--primary); color: white;
+  font-family: var(--font-sans); font-size: 13.5px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(139,75,90,0.3); transition: opacity 0.2s, transform 0.15s;
+  .material-symbols-outlined { font-size: 18px; }
+  &:hover { opacity: 0.9; transform: translateY(-1px); }
+}

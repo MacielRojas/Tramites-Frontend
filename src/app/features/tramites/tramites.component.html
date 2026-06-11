@@ -1,0 +1,261 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Trámites en curso</h1>
+      <p class="page-subtitle">Gestión y seguimiento detallado de todos los expedientes activos.</p>
+    </div>
+    <div class="header-actions">
+      <div class="filter-wrap">
+        <button class="btn-ghost" [class.btn-ghost--active]="showFilter()" (click)="showFilter.update(v => !v)">
+          <span class="material-symbols-outlined">filter_list</span>
+          Filtrar
+          @if (filterStatus() !== 'Todos') {
+            <span class="filter-badge">1</span>
+          }
+        </button>
+        @if (showFilter()) {
+          <div class="filter-dropdown glass-card">
+            <p class="filter-title">Estado del trámite</p>
+            <div class="filter-chips">
+              @for (opt of statusOptions; track opt) {
+                <button class="filter-chip" [class.filter-chip--active]="filterStatus() === opt" (click)="setFilter(opt)">
+                  {{ opt }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <button class="btn-ghost" (click)="exportCSV()">
+        <span class="material-symbols-outlined">download</span>
+        Exportar
+      </button>
+      <button class="btn-primary" (click)="openNew()">
+        <span class="material-symbols-outlined">add</span>
+        Nuevo Trámite
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    @for (stat of stats; track stat.label) {
+      <div class="stat-card glass-card">
+        <div class="stat-icon-wrap">
+          <span class="material-symbols-outlined stat-icon">{{ stat.icon }}</span>
+        </div>
+        <div class="stat-info">
+          <p class="stat-label">{{ stat.label }}</p>
+          <p class="stat-value">{{ stat.value }}</p>
+          <p class="stat-note" [class.note--positive]="stat.notePositive" [class.note--negative]="!stat.notePositive">
+            {{ stat.note }}
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Table -->
+  <div class="section glass-card">
+    <table class="tramites-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>TRÁMITE</th>
+          <th>CLIENTE</th>
+          <th>ESTADO</th>
+          <th>FECHA</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of pagedTramites(); track t.id) {
+          <tr class="tramite-row" (click)="openDetail(t)">
+            <td><span class="tramite-id">{{ t.id }}</span></td>
+            <td>
+              <p class="tramite-name">{{ t.name }}</p>
+              <p class="tramite-sub">{{ t.subtitle }}</p>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar" [style.background]="t.clientColor">{{ t.clientInitials }}</div>
+                <span class="client-name">{{ t.clientName }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="status-chip" [class]="'status-chip ' + statusClass(t.status)">{{ t.status }}</span>
+            </td>
+            <td class="date-cell">{{ t.date }}</td>
+            <td>
+              <button class="row-detail-btn" (click)="openDetail(t); $event.stopPropagation()" title="Ver detalle">
+                <span class="material-symbols-outlined">chevron_right</span>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <p class="pagination-info">Mostrando {{ pagedTramites().length }} de {{ filteredTramites().length }} trámites</p>
+      <div class="page-btns">
+        <button class="page-btn" [disabled]="currentPage() === 1" (click)="setPage(currentPage() - 1)">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        @for (p of pages(); track p) {
+          <button class="page-btn" [class.page-btn--active]="p === currentPage()" (click)="setPage(p)">{{ p }}</button>
+        }
+        <button class="page-btn" [disabled]="currentPage() === totalPages()" (click)="setPage(currentPage() + 1)">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo Trámite ═══════════════ -->
+@if (showNewModal()) {
+  <div class="modal-overlay" (click)="showNewModal.set(false)">
+    <div class="modal glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap">
+            <span class="material-symbols-outlined">add_circle</span>
+          </div>
+          <div>
+            <h2 class="modal-title">Nuevo Trámite</h2>
+            <p class="modal-sub">Registra un nuevo expediente en el sistema</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="showNewModal.set(false)">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Nombre del trámite *</label>
+            <input type="text" [(ngModel)]="newForm.name" placeholder="Ej: Licencia de Apertura" />
+          </div>
+          <div class="form-field">
+            <label>Subtítulo / Referencia</label>
+            <input type="text" [(ngModel)]="newForm.subtitle" placeholder="Ej: Expediente A-22" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Nombre del cliente *</label>
+            <input type="text" [(ngModel)]="newForm.clientName" placeholder="Ej: Juan García" />
+          </div>
+          <div class="form-field">
+            <label>Responsable</label>
+            <input type="text" [(ngModel)]="newForm.responsible" placeholder="Ej: Dept. Urbanismo" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Estado</label>
+            <select [(ngModel)]="newForm.status">
+              <option value="Pendiente">Pendiente</option>
+              <option value="En Proceso">En Proceso</option>
+              <option value="Completado">Completado</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Prioridad</label>
+            <select [(ngModel)]="newForm.priority">
+              <option value="Alta">Alta</option>
+              <option value="Media">Media</option>
+              <option value="Baja">Baja</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field form-field--full">
+          <label>Descripción</label>
+          <textarea rows="3" [(ngModel)]="newForm.description" placeholder="Descripción detallada del trámite..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showNewModal.set(false)">Cancelar</button>
+        <button class="btn-confirm" (click)="submitNew()" [disabled]="!newForm.name?.trim() || !newForm.clientName?.trim()">
+          <span class="material-symbols-outlined">add</span>
+          Crear Trámite
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════ PANEL: Detalle del Trámite ═══════════════ -->
+@if (showDetail() && selectedTramite()) {
+  <div class="modal-overlay" (click)="showDetail.set(false)">
+    <div class="detail-panel glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap">
+            <span class="material-symbols-outlined">folder_open</span>
+          </div>
+          <div>
+            <h2 class="modal-title">{{ selectedTramite()!.name }}</h2>
+            <p class="modal-sub">{{ selectedTramite()!.id }}</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="showDetail.set(false)">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="detail-body">
+        <div class="detail-status-row">
+          <span class="status-chip" [class]="'status-chip ' + statusClass(selectedTramite()!.status)">
+            {{ selectedTramite()!.status }}
+          </span>
+          @if (selectedTramite()!.priority) {
+            <span class="prio-chip" [class]="'prio-chip ' + priorityClass(selectedTramite()!.priority)">
+              Prioridad {{ selectedTramite()!.priority }}
+            </span>
+          }
+        </div>
+
+        @if (selectedTramite()!.description) {
+          <div class="detail-section">
+            <p class="detail-label">Descripción</p>
+            <p class="detail-text">{{ selectedTramite()!.description }}</p>
+          </div>
+        }
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <p class="detail-label">Cliente</p>
+            <div class="detail-client">
+              <div class="client-avatar" [style.background]="selectedTramite()!.clientColor">{{ selectedTramite()!.clientInitials }}</div>
+              <span>{{ selectedTramite()!.clientName }}</span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <p class="detail-label">Subtítulo</p>
+            <p class="detail-val">{{ selectedTramite()!.subtitle || '—' }}</p>
+          </div>
+          <div class="detail-item">
+            <p class="detail-label">Responsable</p>
+            <p class="detail-val">{{ selectedTramite()!.responsible || '—' }}</p>
+          </div>
+          <div class="detail-item">
+            <p class="detail-label">Fecha</p>
+            <p class="detail-val">{{ selectedTramite()!.date }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showDetail.set(false)">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

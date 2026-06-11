@@ -1,0 +1,89 @@
+<div class="page-content">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-text">
+      <h2 class="page-title">Políticas de Trámites</h2>
+      <p class="page-subtitle">Diseña, edita y publica flujos de trabajo con diagramas de actividad UML 2.5+.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="btn-primary" (click)="newPolicy()" [disabled]="creating()">
+        <span class="material-symbols-outlined">add</span>
+        {{ creating() ? 'Creando...' : 'Nuevo Flujo' }}
+      </button>
+    </div>
+  </section>
+
+  @if (error()) {
+    <div class="error-banner">
+      <span class="material-symbols-outlined">error</span>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Loading skeleton -->
+  @if (loading()) {
+    <div class="policies-grid">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="policy-card glass-card skeleton"></div>
+      }
+    </div>
+  }
+
+  <!-- Policy list -->
+  @if (!loading()) {
+    @if (policies().length === 0) {
+      <div class="empty-state glass-card">
+        <div class="empty-icon">
+          <span class="material-symbols-outlined">account_tree</span>
+        </div>
+        <h3 class="empty-title">Aún no hay flujos</h3>
+        <p class="empty-desc">Crea tu primer flujo de trámite con el diagrama de actividad UML.</p>
+        <button class="btn-primary" (click)="newPolicy()" [disabled]="creating()">
+          <span class="material-symbols-outlined">add</span>
+          Crear Primer Flujo
+        </button>
+      </div>
+    } @else {
+      <div class="policies-grid">
+        @for (policy of policies(); track policy.id) {
+          <div class="policy-card glass-card" (click)="editPolicy(policy.id!)">
+            <div class="policy-card-header">
+              <div class="policy-icon">
+                <span class="material-symbols-outlined">account_tree</span>
+              </div>
+              <span class="status-badge" [class.status-badge--active]="policy.activa" [class.status-badge--draft]="!policy.activa">
+                {{ policy.activa ? 'Activa' : 'Borrador' }}
+              </span>
+            </div>
+
+            <h3 class="policy-name">{{ policy.nombre }}</h3>
+            <p class="policy-desc">{{ policy.descripcion || 'Sin descripción.' }}</p>
+
+            <div class="policy-meta">
+              <div class="meta-item">
+                <span class="material-symbols-outlined">calendar_today</span>
+                {{ formatDate(policy.fechaCreacion) }}
+              </div>
+              @if (policy.creadoPor) {
+                <div class="meta-item">
+                  <span class="material-symbols-outlined">person</span>
+                  {{ policy.creadoPor }}
+                </div>
+              }
+            </div>
+
+            <div class="policy-actions">
+              <button class="action-btn action-btn--edit" (click)="editPolicy(policy.id!)">
+                <span class="material-symbols-outlined">edit</span>
+                Editar
+              </button>
+              <button class="action-btn action-btn--delete" (click)="deletePolicy(policy.id!, $event)">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

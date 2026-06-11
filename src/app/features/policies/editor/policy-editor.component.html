@@ -1,0 +1,447 @@
+@if (loading()) {
+  <div class="editor-loading">
+    <div class="loading-ring"></div>
+    <p>Cargando diagrama…</p>
+  </div>
+} @else {
+<div class="editor-root">
+
+  <!-- ===== TOOLBAR ===== -->
+  <div class="toolbar glass-card">
+    <button class="tool-btn tool-btn--back" (click)="goBack()" title="Volver">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Node palette -->
+    <button class="tool-btn" title="Añadir nodo Inicio" (click)="addNode('initial')">
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <circle cx="9" cy="9" r="8" fill="#22191b"/>
+      </svg>
+      <span>Inicio</span>
+    </button>
+    <button class="tool-btn" title="Añadir Actividad" (click)="addNode('activity')">
+      <svg width="18" height="14" viewBox="0 0 36 24">
+        <rect x="1" y="1" width="34" height="22" rx="6" fill="none" stroke="#524346" stroke-width="2"/>
+      </svg>
+      <span>Actividad</span>
+    </button>
+    <button class="tool-btn" title="Añadir Decisión" (click)="addNode('decision')">
+      <svg width="18" height="14" viewBox="0 0 40 28">
+        <polygon points="20,1 39,14 20,27 1,14" fill="none" stroke="#524346" stroke-width="2"/>
+      </svg>
+      <span>Decisión</span>
+    </button>
+    <button class="tool-btn" title="Añadir nodo Fin" (click)="addNode('final')">
+      <svg width="18" height="18" viewBox="0 0 28 28">
+        <circle cx="14" cy="14" r="13" fill="none" stroke="#22191b" stroke-width="2"/>
+        <circle cx="14" cy="14" r="8" fill="#22191b"/>
+      </svg>
+      <span>Fin</span>
+    </button>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Lane & connect -->
+    <button class="tool-btn" title="Añadir carril" (click)="addLane()">
+      <span class="material-symbols-outlined">table_rows</span>
+      <span>+ Carril</span>
+    </button>
+    <button class="tool-btn" [class.tool-btn--active]="connectMode()" title="Modo conexión (C)" (click)="toggleConnect()">
+      <span class="material-symbols-outlined">timeline</span>
+      <span>Conectar</span>
+    </button>
+    <button class="tool-btn tool-btn--danger" title="Eliminar seleccionado (Del)" (click)="deleteSelected()"
+      [disabled]="!selNodeId() && !selEdgeId()">
+      <span class="material-symbols-outlined">delete</span>
+    </button>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Zoom -->
+    <div class="zoom-group">
+      <button class="zoom-btn" (click)="zoomOut()" title="Alejar">−</button>
+      <span class="zoom-label">{{ zoomPct() }}%</span>
+      <button class="zoom-btn" (click)="zoomIn()" title="Acercar">+</button>
+      <button class="zoom-btn" (click)="zoomReset()" title="Restablecer zoom">⟳</button>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Orientation toggle -->
+    <button class="tool-btn" [class.tool-btn--active]="vertical()"
+      title="Cambiar orientación" (click)="vertical.update(v => !v)">
+      <span class="material-symbols-outlined">{{ vertical() ? 'view_column' : 'view_agenda' }}</span>
+      <span>{{ vertical() ? 'Vertical' : 'Horizontal' }}</span>
+    </button>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- AI & Export -->
+    <button class="tool-btn" [class.tool-btn--active]="showChat()" title="IA Asistente" (click)="showChat.update(v => !v)">
+      <span class="material-symbols-outlined">auto_awesome</span>
+      <span>IA Asistente</span>
+    </button>
+    <button class="tool-btn" title="Exportar SVG" (click)="exportSvg()">
+      <span class="material-symbols-outlined">download</span>
+      <span>Exportar</span>
+    </button>
+
+    <div class="toolbar-spacer"></div>
+
+    <!-- Status toggle -->
+    <div class="status-toggle" [class.status-toggle--active]="policy()?.activa">
+      <span class="material-symbols-outlined">{{ policy()?.activa ? 'toggle_on' : 'toggle_off' }}</span>
+      {{ policy()?.activa ? 'ACTIVA' : 'BORRADOR' }}
+    </div>
+
+    <!-- Panel toggle -->
+    <button class="tool-btn" (click)="showPanel.update(v => !v)" title="Detalles">
+      <span class="material-symbols-outlined">{{ showPanel() ? 'chevron_right' : 'chevron_left' }}</span>
+    </button>
+  </div>
+
+  <!-- ===== EDITOR BODY ===== -->
+  <div class="editor-body">
+
+    <!-- ===== CANVAS ===== -->
+    <div class="canvas-wrapper" [class.connect-cursor]="connectMode()">
+      <div class="canvas-scroll">
+        <svg
+          #svgCanvas
+          class="diagram-svg"
+          [attr.width]="svgW"
+          [attr.height]="svgH"
+          [style.transform]="'scale(' + zoom() + ')'"
+          [style.transform-origin]="'top left'"
+          (mousemove)="onSvgMm($event)"
+          (mouseup)="onSvgMu()"
+          (click)="onSvgClick($event)"
+        >
+          <!-- Defs: arrowhead marker -->
+          <defs>
+            <marker id="arrow-end" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M 1 1 L 7 4.5 L 1 8" fill="none" stroke="#524346" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+            <marker id="arrow-end-sel" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M 1 1 L 7 4.5 L 1 8" fill="none" stroke="#8b4b5a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+            <marker id="arrow-ghost" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+              <path d="M 1 1 L 7 4.5 L 1 8" fill="none" stroke="#8b4b5a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+            <filter id="sel-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feFlood flood-color="#8b4b5a" flood-opacity="0.35" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+              <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- ===== Swimlanes ===== -->
+          @if (!vertical()) {
+            <!-- HORIZONTAL: lanes as rows -->
+            @for (lane of diagram().lanes; track lane.id; let i = $index) {
+              <g class="swimlane-group">
+                <rect [attr.x]="0" [attr.y]="i * LANE_H" [attr.width]="svgW" [attr.height]="LANE_H"
+                      [attr.fill]="laneColor(i)" stroke="none"/>
+                <line [attr.x1]="0" [attr.y1]="(i + 1) * LANE_H"
+                      [attr.x2]="svgW" [attr.y2]="(i + 1) * LANE_H"
+                      stroke="rgba(200,180,185,0.35)" stroke-width="1"/>
+                <rect [attr.x]="0" [attr.y]="i * LANE_H" [attr.width]="LABEL_W" [attr.height]="LANE_H"
+                      fill="rgba(248,168,185,0.07)" stroke="none"/>
+                <line [attr.x1]="LABEL_W" [attr.y1]="i * LANE_H"
+                      [attr.x2]="LABEL_W" [attr.y2]="(i + 1) * LANE_H"
+                      stroke="rgba(200,180,185,0.4)" stroke-width="1"/>
+                <text
+                  [attr.x]="LABEL_W / 2"
+                  [attr.y]="i * LANE_H + LANE_H / 2"
+                  text-anchor="middle" dominant-baseline="middle"
+                  font-family="DM Sans, sans-serif" font-size="12" font-weight="600"
+                  fill="#524346" opacity="0.7"
+                  [attr.transform]="'rotate(-90,' + (LABEL_W/2) + ',' + (i*LANE_H + LANE_H/2) + ')'"
+                >{{ lane.label }}</text>
+              </g>
+            }
+            <line x1="0" y1="0" [attr.x2]="svgW" y2="0" stroke="rgba(200,180,185,0.4)" stroke-width="1"/>
+          } @else {
+            <!-- VERTICAL: lanes as columns -->
+            @for (lane of diagram().lanes; track lane.id; let i = $index) {
+              <g class="swimlane-group">
+                <!-- Column background -->
+                <rect [attr.x]="i * LANE_W_VERT" [attr.y]="0"
+                      [attr.width]="LANE_W_VERT" [attr.height]="svgH"
+                      [attr.fill]="laneColor(i)" stroke="none"/>
+                <!-- Right border of column -->
+                <line [attr.x1]="(i + 1) * LANE_W_VERT" [attr.y1]="0"
+                      [attr.x2]="(i + 1) * LANE_W_VERT" [attr.y2]="svgH"
+                      stroke="rgba(200,180,185,0.35)" stroke-width="1"/>
+                <!-- Header background -->
+                <rect [attr.x]="i * LANE_W_VERT" [attr.y]="0"
+                      [attr.width]="LANE_W_VERT" [attr.height]="LABEL_H_VERT"
+                      fill="rgba(248,168,185,0.08)" stroke="none"/>
+                <!-- Header bottom border -->
+                <line [attr.x1]="i * LANE_W_VERT" [attr.y1]="LABEL_H_VERT"
+                      [attr.x2]="(i + 1) * LANE_W_VERT" [attr.y2]="LABEL_H_VERT"
+                      stroke="rgba(200,180,185,0.4)" stroke-width="1"/>
+                <!-- Lane label (horizontal, centered at top) -->
+                <text
+                  [attr.x]="i * LANE_W_VERT + LANE_W_VERT / 2"
+                  [attr.y]="LABEL_H_VERT / 2"
+                  text-anchor="middle" dominant-baseline="middle"
+                  font-family="DM Sans, sans-serif" font-size="12" font-weight="600"
+                  fill="#524346" opacity="0.7"
+                >{{ lane.label }}</text>
+              </g>
+            }
+            <!-- Top border & left border -->
+            <line x1="0" y1="0" [attr.x2]="svgW" y2="0" stroke="rgba(200,180,185,0.4)" stroke-width="1"/>
+            <line x1="0" y1="0" x2="0" [attr.y2]="svgH" stroke="rgba(200,180,185,0.4)" stroke-width="1"/>
+          }
+
+          <!-- ===== Edges ===== -->
+          <g class="edges-layer">
+            @for (edge of diagram().edges; track edge.id) {
+              <g class="edge-path" (click)="onEdgeClick($event, edge.id)">
+                <path
+                  [attr.d]="edgePath(edge)"
+                  [attr.stroke]="selEdgeId() === edge.id ? '#8b4b5a' : '#524346'"
+                  [attr.stroke-width]="selEdgeId() === edge.id ? '2.2' : '1.6'"
+                  fill="none"
+                  stroke-linecap="round"
+                  [attr.marker-end]="selEdgeId() === edge.id ? 'url(#arrow-end-sel)' : 'url(#arrow-end)'"
+                  [attr.opacity]="selEdgeId() === edge.id ? '1' : '0.75'"
+                />
+                <!-- Invisible wider click target -->
+                <path [attr.d]="edgePath(edge)" stroke="transparent" stroke-width="12" fill="none" style="cursor:pointer"/>
+                <!-- Edge label -->
+                @if (edgeLabelPt(edge); as lpt) {
+                  <text [attr.x]="lpt.x" [attr.y]="lpt.y" text-anchor="middle"
+                        font-family="DM Sans, sans-serif" font-size="11" fill="#524346" opacity="0.8">
+                    {{ edge.label }}
+                  </text>
+                }
+              </g>
+            }
+
+            <!-- Ghost edge while connecting -->
+            @if (ghostEdge(); as ghost) {
+              <line
+                [attr.x1]="ghost.x1" [attr.y1]="ghost.y1"
+                [attr.x2]="ghost.x2" [attr.y2]="ghost.y2"
+                stroke="#8b4b5a" stroke-width="1.5" stroke-dasharray="6 4"
+                marker-end="url(#arrow-ghost)" opacity="0.7"
+              />
+            }
+          </g>
+
+          <!-- ===== Nodes ===== -->
+          <g class="nodes-layer">
+            @for (node of diagram().nodes; track node.id) {
+              <g
+                class="node-group"
+                [attr.filter]="selNodeId() === node.id ? 'url(#sel-glow)' : null"
+                [style.cursor]="connectMode() ? 'crosshair' : 'move'"
+                (mousedown)="onNodeMd($event, node.id)"
+              >
+
+                <!-- === Initial node === -->
+                @if (node.type === 'initial') {
+                  <circle
+                    [attr.cx]="node.x" [attr.cy]="node.y" r="10"
+                    fill="#22191b"
+                    [attr.stroke]="selNodeId() === node.id ? '#8b4b5a' : 'none'"
+                    stroke-width="2.5"
+                  />
+                }
+
+                <!-- === Activity node === -->
+                @if (node.type === 'activity') {
+                  <rect
+                    [attr.x]="node.x - 70" [attr.y]="node.y - 26"
+                    width="140" height="52" rx="10"
+                    fill="white" fill-opacity="0.92"
+                    [attr.stroke]="selNodeId() === node.id ? '#8b4b5a' : '#847375'"
+                    [attr.stroke-width]="selNodeId() === node.id ? '2' : '1.5'"
+                  />
+                  @for (line of labelLines(node.label); track $index; let li = $index) {
+                    <text
+                      [attr.x]="node.x"
+                      [attr.y]="node.y - (labelLines(node.label).length - 1) * 8 + li * 16"
+                      text-anchor="middle" dominant-baseline="middle"
+                      font-family="DM Sans, sans-serif" font-size="12" font-weight="500"
+                      [attr.fill]="selNodeId() === node.id ? '#8b4b5a' : '#22191b'"
+                    >{{ line }}</text>
+                  }
+                }
+
+                <!-- === Decision node === -->
+                @if (node.type === 'decision') {
+                  <polygon
+                    [attr.points]="diamondPts(node)"
+                    fill="white" fill-opacity="0.92"
+                    [attr.stroke]="selNodeId() === node.id ? '#8b4b5a' : '#847375'"
+                    [attr.stroke-width]="selNodeId() === node.id ? '2' : '1.5'"
+                  />
+                  @for (line of labelLines(node.label); track $index; let li = $index) {
+                    <text
+                      [attr.x]="node.x"
+                      [attr.y]="node.y - (labelLines(node.label).length - 1) * 7 + li * 14"
+                      text-anchor="middle" dominant-baseline="middle"
+                      font-family="DM Sans, sans-serif" font-size="10" font-weight="500"
+                      [attr.fill]="selNodeId() === node.id ? '#8b4b5a' : '#22191b'"
+                    >{{ line }}</text>
+                  }
+                }
+
+                <!-- === Final node (Activity Final) === -->
+                @if (node.type === 'final') {
+                  <circle
+                    [attr.cx]="node.x" [attr.cy]="node.y" r="14"
+                    fill="white" fill-opacity="0.92"
+                    [attr.stroke]="selNodeId() === node.id ? '#8b4b5a' : '#22191b'"
+                    stroke-width="2"
+                  />
+                  <circle [attr.cx]="node.x" [attr.cy]="node.y" r="9" fill="#22191b"/>
+                }
+
+              </g>
+            }
+          </g>
+
+        </svg>
+      </div>
+    </div>
+
+    <!-- ===== RIGHT PANEL ===== -->
+    @if (showPanel()) {
+      <aside class="details-panel glass-card">
+        <div class="panel-header">
+          <h3 class="panel-title">Detalles de Política</h3>
+          <button class="panel-close" (click)="showPanel.set(false)">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div class="panel-body">
+
+          <div class="field-group">
+            <label class="field-label">NOMBRE DEL FLUJO</label>
+            <input class="field-input" type="text"
+              [ngModel]="policyName()"
+              (ngModelChange)="policyName.set($event)"
+              placeholder="Nombre del flujo…"/>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">DESCRIPCIÓN</label>
+            <textarea class="field-textarea" rows="3"
+              [ngModel]="policyDesc()"
+              (ngModelChange)="policyDesc.set($event)"
+              placeholder="Breve descripción del proceso…"></textarea>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">ESTADO</label>
+            <div class="field-status">
+              <span class="status-dot" [class.status-dot--active]="policy()?.activa"></span>
+              {{ policy()?.activa ? 'Activa' : 'Borrador' }}
+            </div>
+          </div>
+
+          @if (policy()?.creadoPor) {
+            <div class="field-group">
+              <label class="field-label">CREADO POR</label>
+              <p class="field-value">{{ policy()?.creadoPor }}</p>
+            </div>
+          }
+
+          @if (policy()?.fechaCreacion) {
+            <div class="field-group">
+              <label class="field-label">FECHA CREACIÓN</label>
+              <p class="field-value">{{ policy()?.fechaCreacion | date:'dd MMM yyyy, HH:mm' }}</p>
+            </div>
+          }
+
+          <!-- Selected node editor -->
+          @if (getSelectedNode(); as node) {
+            <div class="panel-section">
+              <div class="section-title">Nodo seleccionado</div>
+              <div class="node-type-badge">
+                {{ node.type === 'initial' ? '● Inicio' : node.type === 'activity' ? '▭ Actividad' : node.type === 'decision' ? '◆ Decisión' : '◉ Fin' }}
+              </div>
+              @if (node.type === 'activity' || node.type === 'decision') {
+                <div class="field-group">
+                  <label class="field-label">ETIQUETA</label>
+                  <input class="field-input" type="text"
+                    [ngModel]="node.label"
+                    (ngModelChange)="updateNodeLabel(node.id, $event)"
+                    placeholder="Etiqueta del nodo…"/>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Lanes list -->
+          <div class="panel-section">
+            <div class="section-title">Carriles</div>
+            @for (lane of diagram().lanes; track lane.id; let i = $index) {
+              <div class="lane-row">
+                <span class="lane-num">{{ i + 1 }}</span>
+                <input class="lane-input" type="text"
+                  [ngModel]="lane.label"
+                  (ngModelChange)="updateLaneLabel(lane.id, $event)"/>
+                <button class="lane-del" (click)="deleteLane(lane.id)" title="Eliminar carril">
+                  <span class="material-symbols-outlined">remove</span>
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Historial placeholder -->
+          <div class="panel-section">
+            <div class="section-title">Historial</div>
+            <div class="history-item">
+              <span class="material-symbols-outlined">history</span>
+              <div>
+                <p class="history-action">Diagrama editado</p>
+                <p class="history-time">Hoy</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel footer -->
+        <div class="panel-footer">
+          @if (saveOk()) {
+            <div class="save-ok">
+              <span class="material-symbols-outlined">check_circle</span>
+              Guardado
+            </div>
+          }
+          <button class="panel-btn panel-btn--secondary" (click)="saveDraft()" [disabled]="saving()">
+            {{ saving() ? 'Guardando…' : 'Guardar Borrador' }}
+          </button>
+          <button class="panel-btn panel-btn--primary" (click)="publishChanges()" [disabled]="saving()">
+            <span class="material-symbols-outlined">publish</span>
+            Publicar Cambios
+          </button>
+        </div>
+      </aside>
+    }
+  </div>
+
+  <!-- ===== IA CHAT FLOAT ===== -->
+  @if (showChat()) {
+    <div class="ia-chat-float">
+      <app-ia-chat
+        [diagram]="diagram()"
+        [vertical]="vertical()"
+        (applyDiagram)="onIaApply($event)"
+        (close)="showChat.set(false)"
+      />
+    </div>
+  }
+
+</div>
+}

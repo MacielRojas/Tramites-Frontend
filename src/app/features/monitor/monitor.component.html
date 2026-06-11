@@ -1,0 +1,94 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Monitor de Actividad</h1>
+      <p class="page-subtitle">Seguimiento en tiempo real de todos los eventos del sistema.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-ghost" (click)="clearLog()">
+        <span class="material-symbols-outlined">delete_sweep</span>
+        Limpiar log
+      </button>
+      <button class="btn-live" [class.btn-live--off]="!isLive()" (click)="toggleLive()">
+        <span class="live-dot" [class.live-dot--off]="!isLive()"></span>
+        {{ isLive() ? 'En Vivo' : 'Pausado' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Live stats -->
+  <div class="stats-row">
+    @for (stat of liveStats; track stat.label) {
+      <div class="stat-card glass-card">
+        <div class="stat-icon-wrap">
+          <span class="material-symbols-outlined stat-icon">{{ stat.icon }}</span>
+        </div>
+        <div class="stat-info">
+          <p class="stat-label">{{ stat.label }}</p>
+          <p class="stat-value">{{ stat.value }}</p>
+          @if (stat.trend) {
+            <span class="trend-chip" [class]="'trend-chip--' + stat.trend">
+              <span class="material-symbols-outlined">
+                {{ stat.trend === 'up' ? 'trending_up' : stat.trend === 'down' ? 'trending_down' : 'trending_flat' }}
+              </span>
+              {{ stat.trend === 'up' ? 'Subiendo' : stat.trend === 'down' ? 'Bajando' : 'Estable' }}
+            </span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Activity feed -->
+  <div class="feed-card glass-card">
+    <div class="feed-header">
+      <h2 class="feed-title">
+        Registro de Eventos
+        <span class="event-count">{{ events().length }}</span>
+      </h2>
+      <div class="live-indicator" [class.live-indicator--off]="!isLive()">
+        <span class="live-pulse" [class.live-pulse--off]="!isLive()"></span>
+        {{ isLive() ? 'Actualizando en tiempo real' : 'Actualización pausada' }}
+      </div>
+    </div>
+
+    <div class="feed-table-wrap">
+      <table class="feed-table">
+        <thead>
+          <tr>
+            <th>TIPO</th>
+            <th>USUARIO</th>
+            <th>ACCIÓN</th>
+            <th>MÓDULO</th>
+            <th>HORA</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ev of events(); track ev.id) {
+            <tr class="feed-row" [class.feed-row--new]="ev.id === events()[0].id && isLive()">
+              <td>
+                <div class="ev-type-cell" [class]="typeClass(ev.type)">
+                  <span class="material-symbols-outlined">{{ typeIcon(ev.type) }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="ev-user">{{ ev.user }}</span>
+              </td>
+              <td class="ev-action">{{ ev.action }}</td>
+              <td>
+                <span class="module-chip">{{ ev.module }}</span>
+              </td>
+              <td class="ev-time">{{ formatTime(ev.timestamp) }}</td>
+            </tr>
+          }
+          @empty {
+            <tr><td colspan="5" class="empty-row">No hay eventos registrados.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

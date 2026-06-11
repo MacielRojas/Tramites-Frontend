@@ -1,0 +1,238 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Usuarios</h1>
+      <p class="page-subtitle">Gestión de cuentas, roles y asignación de departamentos.</p>
+    </div>
+    <button class="btn-primary" (click)="openNew()">
+      <span class="material-symbols-outlined">person_add</span>
+      Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar glass-card">
+    <div class="search-wrap">
+      <span class="material-symbols-outlined search-icon">search</span>
+      <input class="search-input" type="text" placeholder="Buscar por usuario o email…"
+             [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)" />
+    </div>
+    <div class="filter-selects">
+      <select class="filter-select" [value]="filterRole()" (change)="filterRole.set($any($event.target).value)">
+        <option value="Todos">Todos los roles</option>
+        <option value="ROLE_ADMIN">Administrador</option>
+        <option value="ROLE_FUNCIONARIO">Funcionario</option>
+        <option value="ROLE_CLIENTE">Cliente</option>
+      </select>
+      <select class="filter-select" [value]="filterStatus()" (change)="filterStatus.set($any($event.target).value)">
+        <option value="Todos">Todos los estados</option>
+        <option value="activo">Activo</option>
+        <option value="inactivo">Inactivo</option>
+        <option value="suspendido">Suspendido</option>
+      </select>
+    </div>
+    <span class="results-count">{{ filteredUsers().length }} usuario(s)</span>
+  </div>
+
+  <!-- Table -->
+  <div class="section glass-card">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>USUARIO</th>
+          <th>ROL</th>
+          <th>DEPARTAMENTO</th>
+          <th>ESTADO</th>
+          <th>REGISTRO</th>
+          <th>ACCIONES</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of filteredUsers(); track u.id) {
+          <tr class="user-row">
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar" [style.background]="u.avatarColor">{{ u.initials }}</div>
+                <div>
+                  <p class="user-name">{{ u.username }}</p>
+                  <p class="user-email">{{ u.email }}</p>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="role-chip" [class]="'role-chip ' + roleBadgeClass(u.role)">{{ roleLabel(u.role) }}</span>
+            </td>
+            <td class="dept-cell-text">{{ u.department }}</td>
+            <td>
+              <span class="status-chip" [class]="'status-chip ' + statusClass(u.status)">{{ u.status | titlecase }}</span>
+            </td>
+            <td class="date-cell">{{ u.createdAt }}</td>
+            <td>
+              <div class="action-btns">
+                <button class="icon-btn-sm" title="Editar" (click)="openEdit(u)">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button class="icon-btn-sm icon-btn-sm--danger" title="Eliminar" (click)="askDelete(u.id)">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="6" class="empty-row">No se encontraron usuarios con ese criterio.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo Usuario ═══════════════ -->
+@if (showNewModal()) {
+  <div class="modal-overlay" (click)="showNewModal.set(false)">
+    <div class="modal glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap"><span class="material-symbols-outlined">person_add</span></div>
+          <div><h2 class="modal-title">Nuevo Usuario</h2><p class="modal-sub">Crea una cuenta en el sistema</p></div>
+        </div>
+        <button class="modal-close" (click)="showNewModal.set(false)"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Nombre de usuario *</label>
+            <input type="text" [(ngModel)]="newForm.username" placeholder="nombre.apellido" />
+          </div>
+          <div class="form-field">
+            <label>Email *</label>
+            <input type="email" [(ngModel)]="newForm.email" placeholder="usuario@tramiteflow.com" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Contraseña</label>
+            <input type="password" [(ngModel)]="newForm.password" placeholder="Mínimo 6 caracteres" />
+          </div>
+          <div class="form-field">
+            <label>Rol</label>
+            <select [(ngModel)]="newForm.role">
+              <option value="ROLE_CLIENTE">Cliente</option>
+              <option value="ROLE_FUNCIONARIO">Funcionario</option>
+              <option value="ROLE_ADMIN">Administrador</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Estado</label>
+            <select [(ngModel)]="newForm.status">
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+              <option value="suspendido">Suspendido</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Departamento</label>
+            <select [(ngModel)]="newForm.department">
+              @for (d of departments; track d) {
+                <option [value]="d">{{ d }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showNewModal.set(false)">Cancelar</button>
+        <button class="btn-confirm" (click)="submitNew()" [disabled]="!newForm.username?.trim() || !newForm.email?.trim()">
+          <span class="material-symbols-outlined">person_add</span>Crear Usuario
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════ MODAL: Editar Usuario ═══════════════ -->
+@if (showEditModal()) {
+  <div class="modal-overlay" (click)="showEditModal.set(false)">
+    <div class="modal glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap"><span class="material-symbols-outlined">manage_accounts</span></div>
+          <div><h2 class="modal-title">Editar Usuario</h2><p class="modal-sub">{{ editForm.username }}</p></div>
+        </div>
+        <button class="modal-close" (click)="showEditModal.set(false)"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Nombre de usuario</label>
+            <input type="text" [(ngModel)]="editForm.username" />
+          </div>
+          <div class="form-field">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="editForm.email" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Rol</label>
+            <select [(ngModel)]="editForm.role">
+              <option value="ROLE_CLIENTE">Cliente</option>
+              <option value="ROLE_FUNCIONARIO">Funcionario</option>
+              <option value="ROLE_ADMIN">Administrador</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Estado</label>
+            <select [(ngModel)]="editForm.status">
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+              <option value="suspendido">Suspendido</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field form-field--full">
+          <label>Departamento</label>
+          <select [(ngModel)]="editForm.department">
+            @for (d of departments; track d) {
+              <option [value]="d">{{ d }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showEditModal.set(false)">Cancelar</button>
+        <button class="btn-confirm" (click)="submitEdit()">
+          <span class="material-symbols-outlined">save</span>Guardar Cambios
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════ CONFIRM: Eliminar ═══════════════ -->
+@if (showDeleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal modal--sm glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-wrap modal-icon-wrap--danger"><span class="material-symbols-outlined">person_off</span></div>
+          <div><h2 class="modal-title">Eliminar usuario</h2><p class="modal-sub">Esta acción no se puede deshacer</p></div>
+        </div>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-text">¿Eliminar a <strong>{{ userToDelete(showDeleteConfirm())?.username }}</strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cancelDelete()">Cancelar</button>
+        <button class="btn-danger" (click)="confirmDelete()">
+          <span class="material-symbols-outlined">delete</span>Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+}

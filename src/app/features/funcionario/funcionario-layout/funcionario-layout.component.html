@@ -1,0 +1,64 @@
+<div class="layout">
+  <div class="bg-decorative">
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar glass-card">
+    <div class="sidebar-brand">
+      <div class="brand-badge">
+        <span class="material-symbols-outlined">badge</span>
+      </div>
+      <div>
+        <h1 class="brand-name">TramiteFlow</h1>
+        <p class="brand-role">Portal Funcionario</p>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.id) {
+        <a [routerLink]="item.route" routerLinkActive="nav-item--active" class="nav-item">
+          <span class="material-symbols-outlined nav-icon">{{ item.icon }}</span>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="user-card glass-card">
+        <div class="user-avatar">{{ userInitials }}</div>
+        <div class="user-info">
+          <p class="user-name">{{ currentUser?.username ?? 'Funcionario' }}</p>
+          <p class="user-role-badge">Funcionario</p>
+        </div>
+        <button class="btn-logout" (click)="logout()" title="Cerrar sesión">
+          <span class="material-symbols-outlined">logout</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main area -->
+  <div class="main-area">
+    <header class="topbar glass-card">
+      <div class="topbar-title">
+        <span class="material-symbols-outlined topbar-icon">work</span>
+        <span class="topbar-label">Panel de Funcionario</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn"><span class="material-symbols-outlined">notifications</span></button>
+        <button class="icon-btn"><span class="material-symbols-outlined">help_outline</span></button>
+        <div class="topbar-divider"></div>
+        <div class="topbar-user">
+          <div class="topbar-avatar">{{ userInitials }}</div>
+          <span class="topbar-username">{{ currentUser?.username ?? 'Funcionario' }}</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>
