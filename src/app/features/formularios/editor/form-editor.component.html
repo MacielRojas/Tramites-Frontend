@@ -1,0 +1,256 @@
+<div class="editor-page">
+  <!-- Top bar -->
+  <div class="editor-topbar glass-card">
+    <button class="btn-back" (click)="goBack()">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+
+    <div class="topbar-fields">
+      <input class="input-nombre" type="text" placeholder="Nombre del formulario"
+             [value]="nombre()" (input)="nombre.set($any($event.target).value)" />
+
+      <select class="select-politica"
+              [value]="politicaId()"
+              (change)="onPoliticaChange($any($event.target).value)">
+        <option value="">Sin política asociada</option>
+        @for (p of politicas(); track p.id) {
+          <option [value]="p.id">{{ p.nombre }}</option>
+        }
+      </select>
+
+      <input class="input-desc" type="text" placeholder="Descripción (opcional)"
+             [value]="descripcion()" (input)="descripcion.set($any($event.target).value)" />
+    </div>
+
+    <div class="topbar-actions">
+      @if (error()) {
+        <span class="topbar-error">
+          <span class="material-symbols-outlined">error</span> {{ error() }}
+        </span>
+      }
+      @if (success()) {
+        <span class="topbar-success">
+          <span class="material-symbols-outlined">check_circle</span> {{ success() }}
+        </span>
+      }
+      <button class="btn btn--primary" [disabled]="saving()" (click)="save()">
+        <span class="material-symbols-outlined">save</span>
+        {{ saving() ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <span class="material-symbols-outlined spin">progress_activity</span>
+      <p>Cargando formulario...</p>
+    </div>
+  } @else {
+    <div class="editor-body">
+      <!-- Left: Palette -->
+      <div class="panel panel--palette glass-card">
+        <h3 class="panel-title">
+          <span class="material-symbols-outlined">widgets</span>
+          Componentes
+        </h3>
+        <p class="panel-hint">Haz clic para agregar</p>
+        <div class="palette-list">
+          @for (item of palette; track item.tipo) {
+            <button class="palette-item" (click)="onDropFromPalette(item.tipo)">
+              <span class="material-symbols-outlined palette-icon">{{ item.icon }}</span>
+              <span class="palette-label">{{ item.label }}</span>
+              <span class="material-symbols-outlined palette-add">add_circle</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Center: Canvas -->
+      <div class="panel panel--canvas">
+        <div class="canvas-header">
+          <h3 class="panel-title">
+            <span class="material-symbols-outlined">edit_document</span>
+            Diseño del Formulario
+          </h3>
+          <span class="campo-count">{{ campos().length }} campo(s)</span>
+        </div>
+
+        @if (campos().length === 0) {
+          <div class="canvas-empty glass-card">
+            <span class="material-symbols-outlined empty-icon">touch_app</span>
+            <p>Haz clic en un componente de la izquierda para añadirlo al formulario</p>
+          </div>
+        } @else {
+          <div class="canvas-list"
+               cdkDropList
+               [cdkDropListData]="campos()"
+               (cdkDropListDropped)="onCanvasDrop($event)">
+            @for (campo of campos(); track campo.id; let i = $index) {
+              <div class="canvas-campo glass-card"
+                   [class.canvas-campo--selected]="campoSeleccionado()?.id === campo.id"
+                   cdkDrag
+                   [cdkDragData]="campo"
+                   (click)="selectCampo(campo)">
+                <div class="campo-drag-handle" cdkDragHandle>
+                  <span class="material-symbols-outlined">drag_indicator</span>
+                </div>
+
+                <div class="campo-preview">
+                  <div class="campo-preview-header">
+                    <span class="material-symbols-outlined campo-type-icon">{{ tipoCampoIcon(campo.tipo) }}</span>
+                    <span class="campo-etiqueta">{{ campo.etiqueta }}</span>
+                    @if (campo.requerido) { <span class="req-badge">Requerido</span> }
+                    <span class="campo-tipo-tag">{{ campo.tipo }}</span>
+                  </div>
+
+                  @switch (campo.tipo) {
+                    @case ('TEXT') {
+                      <div class="preview-input">Texto...</div>
+                    }
+                    @case ('TEXTAREA') {
+                      <div class="preview-textarea">Texto largo...</div>
+                    }
+                    @case ('NUMBER') {
+                      <div class="preview-input">0</div>
+                    }
+                    @case ('DATE') {
+                      <div class="preview-input">dd/mm/aaaa</div>
+                    }
+                    @case ('SELECTOR') {
+                      <div class="preview-select">
+                        <span>{{ campo.opciones?.[0] ?? 'Seleccionar...' }}</span>
+                        <span class="material-symbols-outlined">arrow_drop_down</span>
+                      </div>
+                    }
+                    @case ('RADIO') {
+                      <div class="preview-options">
+                        @for (opt of campo.opciones?.slice(0,2); track opt) {
+                          <span class="preview-radio">
+                            <span class="material-symbols-outlined">radio_button_unchecked</span> {{ opt }}
+                          </span>
+                        }
+                      </div>
+                    }
+                    @case ('CHECKLIST') {
+                      <div class="preview-options">
+                        @for (opt of campo.opciones?.slice(0,2); track opt) {
+                          <span class="preview-check">
+                            <span class="material-symbols-outlined">check_box_outline_blank</span> {{ opt }}
+                          </span>
+                        }
+                      </div>
+                    }
+                    @case ('GRID') {
+                      <div class="preview-grid">
+                        @for (col of campo.columnas; track col.key) {
+                          <span class="grid-col-tag">{{ col.label }}</span>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+
+                <button class="btn-remove" (click)="$event.stopPropagation(); removeCampo(campo.id)">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Right: Properties -->
+      <div class="panel panel--props glass-card">
+        @if (campoSeleccionado(); as sel) {
+          <h3 class="panel-title">
+            <span class="material-symbols-outlined">tune</span>
+            Propiedades
+          </h3>
+
+          <div class="props-form">
+            <div class="prop-group">
+              <label class="prop-label">Etiqueta</label>
+              <input class="prop-input" type="text"
+                     [value]="sel.etiqueta"
+                     (input)="updateCampoField('etiqueta', $any($event.target).value)" />
+            </div>
+
+            @if (['TEXT','TEXTAREA','NUMBER'].includes(sel.tipo)) {
+              <div class="prop-group">
+                <label class="prop-label">Placeholder</label>
+                <input class="prop-input" type="text"
+                       [value]="sel.placeholder ?? ''"
+                       (input)="updateCampoField('placeholder', $any($event.target).value)" />
+              </div>
+            }
+
+            <div class="prop-group prop-group--check">
+              <label class="prop-check-label">
+                <input type="checkbox"
+                       [checked]="sel.requerido"
+                       (change)="updateCampoField('requerido', $any($event.target).checked)" />
+                Campo obligatorio
+              </label>
+            </div>
+
+            @if (hasOpciones(sel.tipo)) {
+              <div class="prop-group">
+                <label class="prop-label">Opciones</label>
+                <div class="opciones-list">
+                  @for (opt of sel.opciones; track $index; let i = $index) {
+                    <div class="opcion-row">
+                      <input class="prop-input prop-input--sm" type="text"
+                             [value]="opt"
+                             (input)="updateOpcion(i, $any($event.target).value)" />
+                      <button class="btn-icon-sm btn-icon-sm--danger" (click)="removeOpcion(i)">
+                        <span class="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
+                  }
+                  <button class="btn-add-small" (click)="addOpcion()">
+                    <span class="material-symbols-outlined">add</span> Agregar opción
+                  </button>
+                </div>
+              </div>
+            }
+
+            @if (sel.tipo === 'GRID') {
+              <div class="prop-group">
+                <label class="prop-label">Columnas de la tabla</label>
+                <div class="columnas-list">
+                  @for (col of sel.columnas; track $index; let i = $index) {
+                    <div class="columna-row">
+                      <input class="prop-input prop-input--sm" type="text"
+                             placeholder="Nombre"
+                             [value]="col.label"
+                             (input)="updateColumna(i, 'label', $any($event.target).value)" />
+                      <select class="prop-select-sm"
+                              [value]="col.tipo"
+                              (change)="updateColumna(i, 'tipo', $any($event.target).value)">
+                        <option value="TEXT">Texto</option>
+                        <option value="NUMBER">Número</option>
+                        <option value="DATE">Fecha</option>
+                        <option value="SELECTOR">Lista</option>
+                      </select>
+                      <button class="btn-icon-sm btn-icon-sm--danger" (click)="removeColumna(i)">
+                        <span class="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
+                  }
+                  <button class="btn-add-small" (click)="addColumna()">
+                    <span class="material-symbols-outlined">add</span> Agregar columna
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="props-empty">
+            <span class="material-symbols-outlined">touch_app</span>
+            <p>Selecciona un campo para editar sus propiedades</p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

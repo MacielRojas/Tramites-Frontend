@@ -1,0 +1,93 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        <span class="material-symbols-outlined">dynamic_form</span>
+        Formularios Dinámicos
+      </h1>
+      <p class="page-subtitle">Diseña formularios con checklist, selectores, tablas y más</p>
+    </div>
+    <button class="btn btn--primary" (click)="goToEditor()">
+      <span class="material-symbols-outlined">add</span> Nuevo Formulario
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert--error">
+      <span class="material-symbols-outlined">error</span> {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">
+      <span class="material-symbols-outlined spin">progress_activity</span>
+      <p>Cargando formularios...</p>
+    </div>
+  } @else {
+    @if (formularios().length === 0) {
+      <div class="empty-state glass-card">
+        <span class="material-symbols-outlined empty-icon">description</span>
+        <h3>No hay formularios todavía</h3>
+        <p>Crea tu primer formulario dinámico para asociarlo a una política.</p>
+        <button class="btn btn--primary" (click)="goToEditor()">
+          <span class="material-symbols-outlined">add</span> Crear Formulario
+        </button>
+      </div>
+    } @else {
+      <div class="formularios-grid">
+        @for (f of formularios(); track f.id) {
+          <div class="glass-card formulario-card">
+            <div class="card-header">
+              <div class="card-icon">
+                <span class="material-symbols-outlined">dynamic_form</span>
+              </div>
+              <div class="card-info">
+                <h3 class="card-nombre">{{ f.nombre }}</h3>
+                @if (f.descripcion) {
+                  <p class="card-desc">{{ f.descripcion }}</p>
+                }
+              </div>
+            </div>
+
+            <div class="card-meta">
+              @if (f.nombrePolitica) {
+                <span class="meta-chip">
+                  <span class="material-symbols-outlined">policy</span>
+                  {{ f.nombrePolitica }}
+                </span>
+              } @else {
+                <span class="meta-chip meta-chip--warning">
+                  <span class="material-symbols-outlined">warning</span>
+                  Sin política asociada
+                </span>
+              }
+              <span class="meta-chip">
+                <span class="material-symbols-outlined">list_alt</span>
+                {{ f.campos?.length ?? 0 }} campo(s)
+              </span>
+            </div>
+
+            @if (f.fechaCreacion) {
+              <div class="card-date">
+                <span class="material-symbols-outlined">calendar_month</span>
+                {{ f.fechaCreacion | date:'dd/MM/yyyy' }}
+              </div>
+            }
+
+            <div class="card-actions">
+              <button class="btn btn--outline btn--sm" (click)="goToEditor(f.id)">
+                <span class="material-symbols-outlined">edit</span> Diseñar
+              </button>
+              <button class="btn btn--danger btn--sm"
+                      [disabled]="deleting() === f.id"
+                      (click)="delete(f.id!)">
+                <span class="material-symbols-outlined">delete</span>
+                {{ deleting() === f.id ? 'Eliminando...' : 'Eliminar' }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,55 @@
+.page-container { padding: 1.5rem; max-width: 700px; }
+.page-header { margin-bottom: 1.5rem; }
+
+.btn-back {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: none; border: none; color: var(--primary, #8b4b5a); font-size: .9rem;
+  cursor: pointer; padding: 0; font-family: 'DM Sans', sans-serif;
+  .material-symbols-outlined { font-size: 1.1rem; }
+  &:hover { text-decoration: underline; }
+}
+
+.form-wrapper { padding: 2rem; }
+.form-header {
+  display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem; border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.form-icon { font-size: 2rem; color: var(--primary, #8b4b5a); }
+.form-title { font-size: 1.4rem; font-weight: 700; color: #2d2d2d; margin: 0 0 .2rem; }
+.form-subtitle { color: #888; font-size: .85rem; margin: 0; }
+
+.alert {
+  display: flex; align-items: center; gap: .5rem; padding: .75rem 1rem;
+  border-radius: 10px; margin-bottom: 1rem; font-size: .9rem;
+  &--error { background: rgba(220,38,38,.1); color: #dc2626; }
+}
+
+.form-body { display: flex; flex-direction: column; gap: 0; }
+.form-group { margin-bottom: 1rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form-label { display: block; font-size: .82rem; color: #666; margin-bottom: .3rem; }
+.required { color: var(--primary, #8b4b5a); }
+
+.form-input, .form-select, .form-textarea {
+  width: 100%; border: 1.5px solid rgba(139,75,90,.2); border-radius: 10px;
+  padding: .55rem .8rem; font-family: 'DM Sans', sans-serif; font-size: .9rem;
+  background: rgba(255,255,255,.6); box-sizing: border-box;
+  &:focus { outline: none; border-color: var(--primary, #8b4b5a); }
+}
+.form-textarea { resize: vertical; }
+.char-count { display: block; text-align: right; font-size: .72rem; color: #bbb; margin-top: .2rem; }
+
+.form-actions {
+  display: flex; justify-content: flex-end; gap: .75rem;
+  margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid rgba(0,0,0,.06);
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem; padding: .6rem 1.25rem;
+  border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: .9rem;
+  cursor: pointer; font-weight: 500; transition: all .2s;
+  .material-symbols-outlined { font-size: 1.1rem; }
+  &--primary  { background: var(--primary, #8b4b5a); color: #fff; border: none;
+    &:hover:not(:disabled) { opacity: .9; } &:disabled { opacity: .5; cursor: not-allowed; } }
+  &--outline  { background: transparent; border: 1.5px solid var(--primary, #8b4b5a); color: var(--primary, #8b4b5a); }
+}

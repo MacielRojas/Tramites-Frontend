@@ -273,6 +273,15 @@
                       [attr.fill]="selNodeId() === node.id ? '#8b4b5a' : '#22191b'"
                     >{{ line }}</text>
                   }
+                  <!-- Campo count badge -->
+                  @if ((node.campos?.length ?? 0) > 0) {
+                    <circle [attr.cx]="node.x + 62" [attr.cy]="node.y - 22" r="9" fill="#8b4b5a"/>
+                    <text [attr.x]="node.x + 62" [attr.y]="node.y - 22"
+                      text-anchor="middle" dominant-baseline="middle"
+                      font-family="DM Sans, sans-serif" font-size="9" font-weight="700" fill="white">
+                      {{ node.campos!.length }}
+                    </text>
+                  }
                 }
 
                 <!-- === Decision node === -->
@@ -377,6 +386,60 @@
                     [ngModel]="node.label"
                     (ngModelChange)="updateNodeLabel(node.id, $event)"
                     placeholder="Etiqueta del nodo…"/>
+                </div>
+              }
+
+              <!-- Campos del formulario (solo actividades) -->
+              @if (node.type === 'activity') {
+                <div class="campos-section">
+                  <div class="campos-header">
+                    <span class="section-title">
+                      CAMPOS DEL FORMULARIO
+                      @if ((node.campos?.length ?? 0) > 0) {
+                        <span class="campos-count">{{ node.campos!.length }}</span>
+                      }
+                    </span>
+                    <button class="btn-ia-suggest"
+                      [disabled]="camposIaLoading()"
+                      (click)="sugerirCamposIA(node)"
+                      title="Sugerir campos con IA">
+                      <span class="material-symbols-outlined"
+                        [class.spin]="camposIaLoading()">
+                        {{ camposIaLoading() ? 'progress_activity' : 'auto_awesome' }}
+                      </span>
+                      IA
+                    </button>
+                  </div>
+
+                  @for (campo of (node.campos ?? []); track campo.id) {
+                    <div class="campo-row">
+                      <input class="campo-etiqueta" type="text"
+                        [ngModel]="campo.etiqueta"
+                        (ngModelChange)="updateCampo(node.id, campo.id, { etiqueta: $event })"
+                        placeholder="Nombre del campo…" />
+                      <select class="campo-tipo"
+                        [ngModel]="campo.tipo"
+                        (ngModelChange)="updateCampo(node.id, campo.id, { tipo: $event })">
+                        @for (t of CAMPO_TIPOS; track t.value) {
+                          <option [value]="t.value">{{ t.label }}</option>
+                        }
+                      </select>
+                      <label class="campo-req" title="Requerido">
+                        <input type="checkbox"
+                          [checked]="campo.requerido"
+                          (change)="updateCampo(node.id, campo.id, { requerido: $any($event.target).checked })" />
+                        Req.
+                      </label>
+                      <button class="campo-del" (click)="removeCampo(node.id, campo.id)" title="Eliminar campo">
+                        <span class="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
+                  }
+
+                  <button class="btn-add-campo" (click)="addCampo(node.id)">
+                    <span class="material-symbols-outlined">add</span>
+                    Agregar campo
+                  </button>
                 </div>
               }
             </div>

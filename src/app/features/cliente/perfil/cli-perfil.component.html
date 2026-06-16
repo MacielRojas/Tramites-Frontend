@@ -1,0 +1,93 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title">Mi Perfil</h1>
+    <p class="page-subtitle">Gestiona tu información personal</p>
+  </div>
+
+  <div class="perfil-grid">
+    <!-- Profile card -->
+    <div class="glass-card perfil-card">
+      <div class="avatar-section">
+        <div class="avatar-circle">{{ initials }}</div>
+        <div>
+          <h2 class="perfil-nombre">{{ profileForm.username }}</h2>
+          <p class="perfil-email">{{ profileForm.email }}</p>
+          <span class="role-badge">CLIENTE</span>
+        </div>
+      </div>
+
+      @if (profileMsg()) {
+        <div class="alert alert--success">
+          <span class="material-symbols-outlined">check_circle</span> {{ profileMsg() }}
+        </div>
+      }
+      @if (profileError()) {
+        <div class="alert alert--error">
+          <span class="material-symbols-outlined">error</span> {{ profileError() }}
+        </div>
+      }
+
+      <h3 class="section-title">Información de Cuenta</h3>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" type="text" [(ngModel)]="profileForm.username" placeholder="Username" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input class="form-input" type="email" [(ngModel)]="profileForm.email" placeholder="correo@ejemplo.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre completo</label>
+        <input class="form-input" type="text" [(ngModel)]="profileForm.fullName" placeholder="Tu nombre completo" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono</label>
+        <input class="form-input" type="tel" [(ngModel)]="profileForm.phone" placeholder="+591 XXXXXXXX" />
+      </div>
+      <button class="btn btn--primary" [disabled]="savingProfile()" (click)="saveProfile()">
+        <span class="material-symbols-outlined">{{ savingProfile() ? 'progress_activity' : 'save' }}</span>
+        {{ savingProfile() ? 'Guardando...' : 'Guardar Cambios' }}
+      </button>
+    </div>
+
+    <!-- Password card -->
+    <div class="glass-card password-card">
+      <h3 class="section-title">
+        <span class="material-symbols-outlined">lock</span> Cambiar Contraseña
+      </h3>
+
+      @if (pwMsg()) {
+        <div class="alert alert--success">
+          <span class="material-symbols-outlined">check_circle</span> {{ pwMsg() }}
+        </div>
+      }
+      @if (pwError()) {
+        <div class="alert alert--error">
+          <span class="material-symbols-outlined">error</span> {{ pwError() }}
+        </div>
+      }
+
+      <div class="form-group">
+        <label class="form-label">Contraseña actual</label>
+        <input class="form-input" type="password" [(ngModel)]="pwForm.currentPassword" placeholder="Contraseña actual" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nueva contraseña</label>
+        <div class="input-wrap">
+          <input class="form-input" [type]="showPwNew() ? 'text' : 'password'" [(ngModel)]="pwForm.newPassword" placeholder="Mínimo 6 caracteres" />
+          <button class="btn-eye" type="button" (click)="showPwNew.update(v => !v)">
+            <span class="material-symbols-outlined">{{ showPwNew() ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirmar contraseña</label>
+        <input class="form-input" type="password" [(ngModel)]="pwForm.confirm" placeholder="Repite la contraseña" />
+      </div>
+      <button class="btn btn--primary" [disabled]="savingPw()" (click)="savePassword()">
+        <span class="material-symbols-outlined">{{ savingPw() ? 'progress_activity' : 'lock_reset' }}</span>
+        {{ savingPw() ? 'Actualizando...' : 'Actualizar Contraseña' }}
+      </button>
+    </div>
+  </div>
+</div>

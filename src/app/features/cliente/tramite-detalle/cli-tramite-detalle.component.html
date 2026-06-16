@@ -1,0 +1,118 @@
+<div class="page-container">
+  <button class="btn-back" (click)="goBack()">
+    <span class="material-symbols-outlined">arrow_back</span> Mis Trámites
+  </button>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <span class="material-symbols-outlined spin">progress_activity</span>
+      <p>Cargando trámite...</p>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert alert--error">
+      <span class="material-symbols-outlined">error</span> {{ error() }}
+    </div>
+  }
+
+  @if (tramite(); as t) {
+    <!-- Header -->
+    <div class="glass-card tramite-header">
+      <div class="header-row">
+        <div class="header-info">
+          <h1 class="tramite-nombre">{{ t.titulo }}</h1>
+          @if (t.descripcion) { <p class="tramite-desc">{{ t.descripcion }}</p> }
+          <div class="meta-row">
+            @if (t.fechaInicio) {
+              <span class="meta-chip">
+                <span class="material-symbols-outlined">calendar_today</span>
+                {{ t.fechaInicio | date:'dd/MM/yyyy' }}
+              </span>
+            }
+          </div>
+        </div>
+        <span class="estado-badge estado-lg" [ngClass]="estadoClass(t.estado)">{{ t.estado }}</span>
+      </div>
+
+      <!-- Progress bar -->
+      @if (actividades().length > 0) {
+        <div class="progress-section">
+          <div class="progress-label">
+            <span>Progreso</span>
+            <span class="progress-pct">{{ progressPercent() }}%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="progressPercent()"></div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Actividades -->
+    <h2 class="section-title">
+      <span class="material-symbols-outlined">assignment</span>
+      Actividades
+      <span class="count-badge">{{ actividades().length }}</span>
+    </h2>
+
+    @if (actividades().length === 0 && !loading()) {
+      <div class="empty-state">
+        <span class="material-symbols-outlined">assignment</span>
+        <p>Aún no hay actividades registradas para este trámite.</p>
+      </div>
+    }
+
+    <div class="actividades-timeline">
+      @for (a of actividades(); track a.id; let i = $index) {
+        <div class="timeline-item">
+          <div class="timeline-marker" [ngClass]="estadoClass(a.estado)">
+            <span class="material-symbols-outlined">{{ actIcon(a.estado) }}</span>
+          </div>
+          @if (i < actividades().length - 1) {
+            <div class="timeline-line"></div>
+          }
+          <div class="glass-card timeline-card">
+            <div class="act-top">
+              <span class="act-orden">Paso {{ a.orden }}</span>
+              <span class="act-nombre">{{ a.nombre }}</span>
+              <span class="estado-badge" [ngClass]="estadoClass(a.estado)">{{ a.estado }}</span>
+            </div>
+            @if (a.descripcion) { <p class="act-desc">{{ a.descripcion }}</p> }
+            @if (a.completadoPorNombre) {
+              <span class="act-resp">
+                <span class="material-symbols-outlined">badge</span> {{ a.completadoPorNombre }}
+              </span>
+            }
+
+            <!-- Formulario dinámico (solo lectura) -->
+            @if (getPlantillaParaActividad(a); as p) {
+              <div class="act-form-section">
+                <div class="act-form-header">
+                  <span class="material-symbols-outlined">assignment</span>
+                  <span class="act-form-nombre">{{ p.nombre }}</span>
+                  @if (getRespuestaParaActividad(a.id)) {
+                    <span class="form-done-badge">
+                      <span class="material-symbols-outlined">check_circle</span> Completado
+                    </span>
+                  }
+                </div>
+                @if (getRespuestaParaActividad(a.id); as r) {
+                  <app-form-renderer
+                    [plantilla]="p"
+                    [readOnly]="true"
+                    [initialValues]="r.valores" />
+                } @else {
+                  <p class="form-pending-note">
+                    <span class="material-symbols-outlined">hourglass_empty</span>
+                    Formulario pendiente de completar por el funcionario.
+                  </p>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

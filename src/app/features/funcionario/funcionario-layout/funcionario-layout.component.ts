@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -11,8 +11,7 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrl: './funcionario-layout.component.scss'
 })
 export class FuncionarioLayoutComponent {
-  private auth   = inject(AuthService);
-  private router = inject(Router);
+  private auth = inject(AuthService);
 
   navItems = [
     { id: 'dashboard',   label: 'Mis Trámites',  icon: 'assignment',      route: '/funcionario/dashboard' },
@@ -21,9 +20,10 @@ export class FuncionarioLayoutComponent {
   ];
 
   get currentUser() { return this.auth.getCurrentUser(); }
+  get userName(): string { return this.currentUser?.username ?? 'Funcionario'; }
 
   get userInitials(): string {
-    return (this.currentUser?.username ?? 'F').slice(0, 2).toUpperCase();
+    return this.userName.slice(0, 2).toUpperCase();
   }
 
   logout(): void { this.auth.logout(); }

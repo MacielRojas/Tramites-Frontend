@@ -1,0 +1,164 @@
+<div class="page-container">
+  <button class="btn-back" (click)="goBack()">
+    <span class="material-symbols-outlined">arrow_back</span> Volver al Trámite
+  </button>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <span class="material-symbols-outlined spin">progress_activity</span>
+      <p>Cargando actividad...</p>
+    </div>
+  }
+
+  @if (success()) {
+    <div class="alert alert--success">
+      <span class="material-symbols-outlined">check_circle</span> {{ success() }}
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert alert--error">
+      <span class="material-symbols-outlined">error</span> {{ error() }}
+    </div>
+  }
+
+  @if (actividad(); as a) {
+    <div class="glass-card actividad-card">
+      <div class="act-header">
+        <div>
+          <div class="act-orden-label">Paso {{ a.orden }}</div>
+          <h1 class="act-nombre">{{ a.nombre }}</h1>
+          @if (a.descripcion) { <p class="act-desc">{{ a.descripcion }}</p> }
+        </div>
+        <span class="estado-badge estado-lg" [ngClass]="estadoClass(a.estado)">{{ a.estado }}</span>
+      </div>
+
+      @if (a.completadoPorNombre || a.fechaInicio || a.fechaFin) {
+        <div class="act-meta">
+          @if (a.completadoPorNombre) {
+            <span class="meta-chip">
+              <span class="material-symbols-outlined">badge</span> {{ a.completadoPorNombre }}
+            </span>
+          }
+          @if (a.fechaInicio) {
+            <span class="meta-chip">
+              <span class="material-symbols-outlined">play_arrow</span>
+              Inicio: {{ a.fechaInicio | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+          }
+          @if (a.fechaFin) {
+            <span class="meta-chip">
+              <span class="material-symbols-outlined">stop</span>
+              Fin: {{ a.fechaFin | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+          }
+        </div>
+      }
+
+      <!-- Actions -->
+      <div class="actions-row">
+        @if (canIniciar()) {
+          <button class="btn btn--primary" [disabled]="actionLoading()" (click)="iniciar()">
+            <span class="material-symbols-outlined">play_arrow</span>
+            {{ actionLoading() ? 'Procesando...' : 'Iniciar Actividad' }}
+          </button>
+        }
+        @if (canCompletar()) {
+          <button class="btn btn--success"
+                  [disabled]="actionLoading() || (plantilla() !== null && !formEnviado())"
+                  (click)="completar()">
+            <span class="material-symbols-outlined">check_circle</span>
+            {{ actionLoading() ? 'Procesando...' : 'Completar Actividad' }}
+          </button>
+          @if (plantilla() !== null && !formEnviado()) {
+            <span class="act-hint">
+              <span class="material-symbols-outlined">info</span>
+              Llena y envía el formulario primero
+            </span>
+          }
+        }
+        @if (canOmitir()) {
+          <button class="btn btn--outline" [disabled]="actionLoading()" (click)="omitir()">
+            <span class="material-symbols-outlined">skip_next</span>
+            {{ actionLoading() ? 'Procesando...' : 'Omitir' }}
+          </button>
+        }
+        @if (!canIniciar() && !canCompletar() && !canOmitir()) {
+          <div class="act-finalizada">
+            <span class="material-symbols-outlined">lock</span>
+            Esta actividad ya fue finalizada.
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Formulario dinámico -->
+    @if (plantilla(); as p) {
+      <div class="glass-card formulario-card">
+        <h2 class="section-title">
+          <span class="material-symbols-outlined">assignment</span>
+          {{ p.nombre }}
+          @if (formEnviado()) {
+            <span class="form-badge form-badge--done">
+              <span class="material-symbols-outlined">check_circle</span> Enviado
+            </span>
+          }
+        </h2>
+        @if (p.descripcion) { <p class="form-desc">{{ p.descripcion }}</p> }
+
+        @if (formLoading()) {
+          <div class="form-saving">
+            <span class="material-symbols-outlined spin">progress_activity</span>
+            Guardando respuestas...
+          </div>
+        } @else {
+          <app-form-renderer
+            [plantilla]="p"
+            [readOnly]="formEnviado() || !canEditForm()"
+            [initialValues]="respuesta()?.valores ?? {}"
+            (formSubmit)="onFormSubmit($event)" />
+        }
+      </div>
+    }
+
+    <!-- Comentarios -->
+    <div class="glass-card comentarios-card">
+      <h2 class="section-title">
+        <span class="material-symbols-outlined">comment</span>
+        Comentarios
+        <span class="count-badge">{{ a.comentarios?.length ?? 0 }}</span>
+      </h2>
+
+      <div class="comentarios-list">
+        @if (!a.comentarios || a.comentarios.length === 0) {
+          <p class="empty-comments">No hay comentarios aún.</p>
+        }
+        @for (c of a.comentarios; track c.autorId + c.fecha) {
+          <div class="comentario-item">
+            <div class="comentario-avatar">{{ c.autorId.slice(0,2).toUpperCase() }}</div>
+            <div class="comentario-body">
+              <div class="comentario-meta">
+                <span class="comentario-autor">{{ c.autorId }}</span>
+                <span class="comentario-fecha">{{ c.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <p class="comentario-texto">{{ c.contenido }}</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="comentario-form">
+        <textarea
+          class="form-textarea"
+          placeholder="Escribe un comentario..."
+          rows="3"
+          [ngModel]="nuevoComentario()"
+          (ngModelChange)="nuevoComentario.set($event)">
+        </textarea>
+        <button class="btn btn--primary" [disabled]="!nuevoComentario().trim()" (click)="addComentario()">
+          <span class="material-symbols-outlined">send</span> Agregar Comentario
+        </button>
+      </div>
+    </div>
+  }
+</div>

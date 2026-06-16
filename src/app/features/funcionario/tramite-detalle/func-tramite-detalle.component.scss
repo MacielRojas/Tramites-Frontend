@@ -1,0 +1,92 @@
+.page-container { padding: 1.5rem; max-width: 900px; }
+
+.btn-back {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: none; border: none; color: var(--primary); font-size: .9rem;
+  cursor: pointer; padding: 0; margin-bottom: 1.25rem; font-family: var(--font-sans);
+  .material-symbols-outlined { font-size: 1.1rem; }
+  &:hover { text-decoration: underline; }
+}
+
+.loading-state, .empty-state {
+  text-align: center; padding: 3rem 1rem; color: #aaa;
+  .material-symbols-outlined { font-size: 2.5rem; display: block; margin-bottom: .5rem; }
+  p { margin: 0; }
+}
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.alert {
+  display: flex; align-items: center; gap: .5rem; padding: .75rem 1rem;
+  border-radius: 10px; margin-bottom: 1rem; font-size: .9rem;
+  &--error   { background: rgba(220,38,38,.1); color: #dc2626; }
+}
+
+.tramite-header { padding: 1.5rem; margin-bottom: 1.5rem; }
+.header-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.tramite-nombre { font-size: 1.5rem; font-weight: 700; color: #2d2d2d; margin: 0 0 .5rem; }
+.tramite-desc { color: #666; margin: 0 0 .75rem; font-size: .9rem; }
+.tramite-meta-row { display: flex; gap: .5rem; flex-wrap: wrap; }
+.meta-chip {
+  display: inline-flex; align-items: center; gap: .3rem;
+  background: rgba(139,75,90,.08); color: #555; border-radius: 20px;
+  padding: .2rem .7rem; font-size: .8rem;
+  .material-symbols-outlined { font-size: .9rem; }
+}
+
+.estado-badge {
+  display: inline-block; padding: .25rem .7rem; border-radius: 20px;
+  font-size: .72rem; font-weight: 600; white-space: nowrap;
+  &.estado-lg { font-size: .85rem; padding: .35rem 1rem; }
+  &.estado--pending   { background: rgba(234,179,8,.15); color: #854d0e; }
+  &.estado--process   { background: rgba(59,130,246,.15); color: #1d4ed8; }
+  &.estado--done      { background: rgba(34,197,94,.15); color: #15803d; }
+  &.estado--rejected  { background: rgba(220,38,38,.15); color: #dc2626; }
+  &.estado--cancelled { background: rgba(156,163,175,.2); color: #6b7280; }
+}
+
+.section-header {
+  display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem;
+  h2 { font-size: 1.1rem; font-weight: 600; color: #2d2d2d; margin: 0; }
+}
+.count-badge {
+  background: var(--primary); color: #fff; border-radius: 12px;
+  padding: .1rem .5rem; font-size: .75rem; font-weight: 600;
+}
+
+.actividades-list { display: flex; flex-direction: column; gap: .75rem; }
+.actividad-item {
+  display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem;
+  cursor: pointer; transition: transform .15s, box-shadow .15s;
+  &:hover { transform: translateX(4px); box-shadow: 0 4px 16px rgba(139,75,90,.12); }
+}
+
+.act-icon-wrap {
+  width: 2.5rem; height: 2.5rem; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+  .material-symbols-outlined { font-size: 1.3rem; }
+  &.estado--pending   { background: rgba(234,179,8,.15); color: #b45309; }
+  &.estado--process   { background: rgba(59,130,246,.15); color: #1d4ed8; }
+  &.estado--done      { background: rgba(34,197,94,.15); color: #15803d; }
+  &.estado--cancelled { background: rgba(156,163,175,.2); color: #6b7280; }
+}
+
+.act-body { flex: 1; }
+.act-top { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .2rem; }
+.act-orden { font-size: .72rem; color: #999; background: rgba(0,0,0,.05); border-radius: 10px; padding: .1rem .5rem; }
+.act-nombre { font-weight: 600; font-size: .95rem; color: #2d2d2d; }
+.act-desc { font-size: .82rem; color: #888; margin: 0; }
+.act-resp { display: inline-flex; align-items: center; gap: .25rem; font-size: .78rem; color: #666; margin-top: .25rem; }
+
+.act-right { display: flex; flex-direction: column; align-items: flex-end; gap: .4rem; }
+.act-arrow { color: #bbb; font-size: 1.2rem; }
+
+.docs-action { margin-top: 1.5rem; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem; padding: .6rem 1.25rem;
+  border-radius: 10px; font-family: var(--font-sans); font-size: .9rem; cursor: pointer;
+  border: none; font-weight: 500; transition: all .2s;
+  .material-symbols-outlined { font-size: 1.1rem; }
+  &--secondary { background: rgba(139,75,90,.1); color: var(--primary); &:hover { background: rgba(139,75,90,.18); } }
+}

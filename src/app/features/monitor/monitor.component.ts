@@ -1,31 +1,21 @@
-import { Component, signal, OnDestroy } from '@angular/core';
+import { Component, signal, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
-interface ActivityEvent {
-  id: number;
-  type: 'create' | 'update' | 'delete' | 'login' | 'error' | 'export';
-  user: string;
-  action: string;
-  module: string;
-  timestamp: Date;
+interface EventoMonitor {
+  tipo: 'create' | 'update' | 'delete' | 'error';
+  usuario: string;
+  accion: string;
+  modulo: string;
+  fecha: string;
 }
 
-interface LiveStat {
-  label: string;
-  value: string;
-  icon: string;
-  trend?: 'up' | 'down' | 'stable';
+interface MonitorStats {
+  totalTramites: number;
+  tramitesAbiertos: number;
+  tramitesCompletados: number;
+  actividadesPendientes: number;
 }
-
-const USERS   = ['alice.morgan','benjamin.chen','sofia.luna','mateo.garcia','diana.rose','admin'];
-const ACTIONS: { type: ActivityEvent['type']; texts: string[]; module: string }[] = [
-  { type: 'create', texts: ['Creó un trámite','Registró nuevo documento','Creó usuario'], module: 'Trámites' },
-  { type: 'update', texts: ['Actualizó estado','Editó departamento','Modificó política'], module: 'Políticas' },
-  { type: 'login',  texts: ['Inició sesión','Accedió al sistema'], module: 'Autenticación' },
-  { type: 'export', texts: ['Exportó reporte','Descargó documentos'], module: 'Documentos' },
-  { type: 'delete', texts: ['Eliminó archivo','Borró trámite'], module: 'Documentos' },
-  { type: 'error',  texts: ['Error de validación','Acceso denegado'], module: 'Sistema' },
-];
 
 @Component({
   selector: 'app-monitor',
@@ -34,93 +24,91 @@ const ACTIONS: { type: ActivityEvent['type']; texts: string[]; module: string }[
   templateUrl: './monitor.component.html',
   styleUrl: './monitor.component.scss'
 })
-export class MonitorComponent implements OnDestroy {
-  private eventId = 1;
-  private intervalRef: ReturnType<typeof setInterval> | null = null;
+export class MonitorComponent implements OnInit, OnDestroy {
+  private http = inject(HttpClient);
+  private pollRef: ReturnType<typeof setInterval> | null = null;
 
-  isLive    = signal(true);
-  maxEvents = 50;
+  isLive   = signal(true);
+  loading  = signal(true);
+  error    = signal('');
+  events   = signal<EventoMonitor[]>([]);
+  stats    = signal<MonitorStats>({ totalTramites: 0, tramitesAbiertos: 0, tramitesCompletados: 0, actividadesPendientes: 0 });
 
-  liveStats: LiveStat[] = [
-    { label: 'Sesiones Activas',  value: '24',   icon: 'sensors',          trend: 'stable' },
-    { label: 'Eventos / min',     value: '12',   icon: 'speed',            trend: 'up'     },
-    { label: 'Trámites Abiertos', value: '124',  icon: 'folder_open',      trend: 'up'     },
-    { label: 'Alertas',           value: '3',    icon: 'warning_amber',    trend: 'down'   },
-  ];
+  ngOnInit(): void {
+    this.fetch();
+    this.startPoll();
+  }
 
-  events = signal<ActivityEvent[]>(this.seedEvents());
-
-  constructor() { this.startLive(); }
-
-  ngOnDestroy(): void { this.stopLive(); }
+  ngOnDestroy(): void { this.stopPoll(); }
 
   toggleLive(): void {
-    if (this.isLive()) { this.stopLive(); this.isLive.set(false); }
-    else               { this.startLive(); this.isLive.set(true); }
+    if (this.isLive()) { this.stopPoll(); this.isLive.set(false); }
+    else               { this.startPoll(); this.isLive.set(true); this.fetch(); }
   }
 
   clearLog(): void { this.events.set([]); }
 
-  private startLive(): void {
-    this.intervalRef = setInterval(() => {
-      this.addEvent(this.randomEvent());
-      // update a random stat slightly
-      const idx = Math.floor(Math.random() * this.liveStats.length);
-      const cur = parseInt(this.liveStats[idx].value);
-      const delta = Math.floor(Math.random() * 3) - 1;
-      this.liveStats[idx] = { ...this.liveStats[idx], value: String(Math.max(0, cur + delta)) };
-    }, 2500);
-  }
-
-  private stopLive(): void {
-    if (this.intervalRef) { clearInterval(this.intervalRef); this.intervalRef = null; }
-  }
-
-  private addEvent(ev: ActivityEvent): void {
-    this.events.update(list => {
-      const next = [ev, ...list];
-      return next.length > this.maxEvents ? next.slice(0, this.maxEvents) : next;
+  private fetch(): void {
+    this.http.get<EventoMonitor[]>('/api/monitor/eventos?limit=60').subscribe({
+      next: ev => { this.events.set(ev); this.loading.set(false); this.error.set(''); },
+      error: () => { this.error.set('No se pudieron cargar los eventos.'); this.loading.set(false); }
+    });
+    this.http.get<MonitorStats>('/api/monitor/stats').subscribe({
+      next: s => this.stats.set(s),
+      error: () => {}
     });
   }
 
-  private randomEvent(): ActivityEvent {
-    const a   = ACTIONS[Math.floor(Math.random() * ACTIONS.length)];
-    const txt = a.texts[Math.floor(Math.random() * a.texts.length)];
-    return {
-      id:        this.eventId++,
-      type:      a.type,
-      user:      USERS[Math.floor(Math.random() * USERS.length)],
-      action:    txt,
-      module:    a.module,
-      timestamp: new Date(),
-    };
+  private startPoll(): void {
+    this.pollRef = setInterval(() => this.fetch(), 4000);
   }
 
-  private seedEvents(): ActivityEvent[] {
-    return Array.from({ length: 12 }, (_, i) => {
-      const ev = this.randomEvent();
-      ev.timestamp = new Date(Date.now() - (12 - i) * 18000);
-      return ev;
+  private stopPoll(): void {
+    if (this.pollRef) { clearInterval(this.pollRef); this.pollRef = null; }
+  }
+
+  typeIcon(t: string): string {
+    const map: Record<string, string> = {
+      create: 'add_circle', update: 'edit', delete: 'delete', error: 'error'
+    };
+    return map[t] ?? 'circle';
+  }
+
+  typeClass(t: string): string {
+    const map: Record<string, string> = {
+      create: 'ev--create', update: 'ev--update', delete: 'ev--delete', error: 'ev--error'
+    };
+    return map[t] ?? '';
+  }
+
+  moduloClass(m: string): string {
+    const map: Record<string, string> = {
+      'Trámites':    'mod--tramites',
+      'Actividades': 'mod--actividades',
+      'Documentos':  'mod--documentos',
+      'Políticas':   'mod--politicas',
+      'Sistema':     'mod--sistema',
+    };
+    return map[m] ?? 'mod--default';
+  }
+
+  formatTime(iso: string): string {
+    return new Date(iso).toLocaleTimeString('es-ES', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
     });
   }
 
-  typeIcon(t: ActivityEvent['type']): string {
-    const map: Record<ActivityEvent['type'], string> = {
-      create: 'add_circle', update: 'edit', delete: 'delete',
-      login: 'login', error: 'error', export: 'download'
-    };
-    return map[t];
+  formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    });
   }
 
-  typeClass(t: ActivityEvent['type']): string {
-    const map: Record<ActivityEvent['type'], string> = {
-      create: 'ev--create', update: 'ev--update', delete: 'ev--delete',
-      login: 'ev--login', error: 'ev--error', export: 'ev--export'
-    };
-    return map[t];
-  }
-
-  formatTime(d: Date): string {
-    return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  isToday(iso: string): boolean {
+    const d = new Date(iso);
+    const now = new Date();
+    return d.getDate() === now.getDate()
+        && d.getMonth() === now.getMonth()
+        && d.getFullYear() === now.getFullYear();
   }
 }

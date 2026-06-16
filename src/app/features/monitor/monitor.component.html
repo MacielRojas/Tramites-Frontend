@@ -4,12 +4,12 @@
   <div class="page-header">
     <div class="header-left">
       <h1 class="page-title">Monitor de Actividad</h1>
-      <p class="page-subtitle">Seguimiento en tiempo real de todos los eventos del sistema.</p>
+      <p class="page-subtitle">Eventos reales del sistema, actualización automática cada 4 segundos.</p>
     </div>
     <div class="header-actions">
       <button class="btn-ghost" (click)="clearLog()">
         <span class="material-symbols-outlined">delete_sweep</span>
-        Limpiar log
+        Limpiar vista
       </button>
       <button class="btn-live" [class.btn-live--off]="!isLive()" (click)="toggleLive()">
         <span class="live-dot" [class.live-dot--off]="!isLive()"></span>
@@ -18,30 +18,47 @@
     </div>
   </div>
 
-  <!-- Live stats -->
+  <!-- Stats reales -->
   <div class="stats-row">
-    @for (stat of liveStats; track stat.label) {
-      <div class="stat-card glass-card">
-        <div class="stat-icon-wrap">
-          <span class="material-symbols-outlined stat-icon">{{ stat.icon }}</span>
-        </div>
-        <div class="stat-info">
-          <p class="stat-label">{{ stat.label }}</p>
-          <p class="stat-value">{{ stat.value }}</p>
-          @if (stat.trend) {
-            <span class="trend-chip" [class]="'trend-chip--' + stat.trend">
-              <span class="material-symbols-outlined">
-                {{ stat.trend === 'up' ? 'trending_up' : stat.trend === 'down' ? 'trending_down' : 'trending_flat' }}
-              </span>
-              {{ stat.trend === 'up' ? 'Subiendo' : stat.trend === 'down' ? 'Bajando' : 'Estable' }}
-            </span>
-          }
-        </div>
+    <div class="stat-card glass-card">
+      <div class="stat-icon-wrap">
+        <span class="material-symbols-outlined stat-icon">folder_open</span>
       </div>
-    }
+      <div class="stat-info">
+        <p class="stat-label">Trámites Abiertos</p>
+        <p class="stat-value">{{ stats().tramitesAbiertos }}</p>
+      </div>
+    </div>
+    <div class="stat-card glass-card">
+      <div class="stat-icon-wrap">
+        <span class="material-symbols-outlined stat-icon">task_alt</span>
+      </div>
+      <div class="stat-info">
+        <p class="stat-label">Completados</p>
+        <p class="stat-value">{{ stats().tramitesCompletados }}</p>
+      </div>
+    </div>
+    <div class="stat-card glass-card">
+      <div class="stat-icon-wrap">
+        <span class="material-symbols-outlined stat-icon">pending_actions</span>
+      </div>
+      <div class="stat-info">
+        <p class="stat-label">Actividades Pendientes</p>
+        <p class="stat-value">{{ stats().actividadesPendientes }}</p>
+      </div>
+    </div>
+    <div class="stat-card glass-card">
+      <div class="stat-icon-wrap">
+        <span class="material-symbols-outlined stat-icon">receipt_long</span>
+      </div>
+      <div class="stat-info">
+        <p class="stat-label">Total Trámites</p>
+        <p class="stat-value">{{ stats().totalTramites }}</p>
+      </div>
+    </div>
   </div>
 
-  <!-- Activity feed -->
+  <!-- Feed de eventos -->
   <div class="feed-card glass-card">
     <div class="feed-header">
       <h2 class="feed-title">
@@ -54,41 +71,63 @@
       </div>
     </div>
 
-    <div class="feed-table-wrap">
-      <table class="feed-table">
-        <thead>
-          <tr>
-            <th>TIPO</th>
-            <th>USUARIO</th>
-            <th>ACCIÓN</th>
-            <th>MÓDULO</th>
-            <th>HORA</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (ev of events(); track ev.id) {
-            <tr class="feed-row" [class.feed-row--new]="ev.id === events()[0].id && isLive()">
-              <td>
-                <div class="ev-type-cell" [class]="typeClass(ev.type)">
-                  <span class="material-symbols-outlined">{{ typeIcon(ev.type) }}</span>
-                </div>
-              </td>
-              <td>
-                <span class="ev-user">{{ ev.user }}</span>
-              </td>
-              <td class="ev-action">{{ ev.action }}</td>
-              <td>
-                <span class="module-chip">{{ ev.module }}</span>
-              </td>
-              <td class="ev-time">{{ formatTime(ev.timestamp) }}</td>
+    @if (loading()) {
+      <div class="feed-loading">
+        <span class="material-symbols-outlined spin">progress_activity</span>
+        Cargando eventos reales...
+      </div>
+    } @else if (error()) {
+      <div class="feed-error">
+        <span class="material-symbols-outlined">error</span> {{ error() }}
+      </div>
+    } @else {
+      <div class="feed-table-wrap">
+        <table class="feed-table">
+          <thead>
+            <tr>
+              <th>TIPO</th>
+              <th>USUARIO</th>
+              <th>ACCIÓN</th>
+              <th>MÓDULO</th>
+              <th>FECHA / HORA</th>
             </tr>
-          }
-          @empty {
-            <tr><td colspan="5" class="empty-row">No hay eventos registrados.</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            @for (ev of events(); track ev.fecha + ev.usuario + ev.accion) {
+              <tr class="feed-row">
+                <td>
+                  <div class="ev-type-cell" [ngClass]="typeClass(ev.tipo)">
+                    <span class="material-symbols-outlined">{{ typeIcon(ev.tipo) }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="ev-user">{{ ev.usuario }}</span>
+                </td>
+                <td class="ev-action">{{ ev.accion }}</td>
+                <td>
+                  <span class="module-chip" [ngClass]="moduloClass(ev.modulo)">{{ ev.modulo }}</span>
+                </td>
+                <td class="ev-time">
+                  @if (isToday(ev.fecha)) {
+                    {{ formatTime(ev.fecha) }}
+                  } @else {
+                    {{ formatDate(ev.fecha) }} {{ formatTime(ev.fecha) }}
+                  }
+                </td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="5" class="empty-row">
+                  <span class="material-symbols-outlined">inbox</span>
+                  No hay eventos registrados aún. Las acciones del sistema aparecerán aquí.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   </div>
 
 </div>

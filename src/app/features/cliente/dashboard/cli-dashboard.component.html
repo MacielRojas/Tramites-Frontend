@@ -1,0 +1,67 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Mis Trámites</h1>
+      <p class="page-subtitle">Consulta el estado de todos tus trámites</p>
+    </div>
+    <button class="btn btn--primary" (click)="nuevoTramite()">
+      <span class="material-symbols-outlined">add_circle</span> Nuevo Trámite
+    </button>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    @for (e of estados; track e) {
+      <button class="filter-btn" [class.active]="filterEstado() === e" (click)="filterEstado.set(e)">
+        {{ e }}
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <span class="material-symbols-outlined spin">progress_activity</span>
+      <p>Cargando tus trámites...</p>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert alert--error">
+      <span class="material-symbols-outlined">error</span> {{ error() }}
+    </div>
+  }
+
+  @if (!loading() && !error() && filtered().length === 0) {
+    <div class="empty-state">
+      <span class="material-symbols-outlined">folder_open</span>
+      <p>No tienes trámites{{ filterEstado() !== 'TODOS' ? ' con estado ' + filterEstado() : '' }}.</p>
+      <button class="btn btn--primary" (click)="nuevoTramite()">Crear mi primer trámite</button>
+    </div>
+  }
+
+  <div class="tramites-list">
+    @for (t of filtered(); track t.id) {
+      <div class="glass-card tramite-card" (click)="openDetalle(t.id)">
+        <div class="card-icon" [ngClass]="estadoClass(t.estado)">
+          <span class="material-symbols-outlined">{{ estadoIcon(t.estado) }}</span>
+        </div>
+        <div class="card-body">
+          <div class="card-top">
+            <span class="tramite-nombre">{{ t.titulo }}</span>
+            <span class="estado-badge" [ngClass]="estadoClass(t.estado)">{{ t.estado }}</span>
+          </div>
+          @if (t.descripcion) { <p class="tramite-desc">{{ t.descripcion }}</p> }
+          <div class="card-meta">
+            @if (t.fechaInicio) {
+              <span class="meta-chip">
+                <span class="material-symbols-outlined">calendar_today</span>
+                {{ t.fechaInicio | date:'dd/MM/yyyy' }}
+              </span>
+            }
+          </div>
+        </div>
+        <span class="material-symbols-outlined card-arrow">chevron_right</span>
+      </div>
+    }
+  </div>
+</div>

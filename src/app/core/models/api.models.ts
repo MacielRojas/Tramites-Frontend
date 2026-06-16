@@ -1,18 +1,16 @@
 export type TramiteEstado = 'PENDIENTE' | 'EN_PROCESO' | 'COMPLETADO' | 'RECHAZADO' | 'CANCELADO';
-export type ActividadEstado = 'PENDIENTE' | 'EN_PROCESO' | 'COMPLETADA' | 'OMITIDA';
+export type ActividadEstado = 'BLOQUEADO' | 'PENDIENTE' | 'EN_PROCESO' | 'COMPLETADO' | 'OMITIDO';
 
 export interface Tramite {
   id: string;
-  nombre: string;
+  titulo: string;
   descripcion?: string;
   estado: TramiteEstado;
-  tipoTramite?: string;
-  clienteNombre?: string;
-  clienteId?: string;
-  funcionarioNombre?: string;
-  funcionarioId?: string;
-  prioridad?: 'ALTA' | 'MEDIA' | 'BAJA';
-  fechaCreacion: string;
+  politicaId?: string;
+  usuarioSolicitanteId?: string;
+  usuarioAsignadoId?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
   fechaActualizacion?: string;
 }
 
@@ -23,16 +21,20 @@ export interface Actividad {
   estado: ActividadEstado;
   orden: number;
   tramiteId: string;
-  responsable?: string;
+  responsableId?: string;
+  completadoPorNombre?: string;
+  rolRequerido?: string;
+  nombreDepartamento?: string;
   fechaInicio?: string;
   fechaFin?: string;
   comentarios?: Comentario[];
+  formularioPlantillaId?: string;
+  respuestaFormularioId?: string;
 }
 
 export interface Comentario {
-  id: string;
-  texto: string;
-  autor: string;
+  autorId: string;
+  contenido: string;
   fecha: string;
 }
 
@@ -40,20 +42,71 @@ export interface Documento {
   id: string;
   nombre: string;
   url: string;
-  tipo: string;
-  tamano: string;
-  fechaSubida: string;
-  subidoPor: string;
+  tipo?: string;
+  size?: number;
+  subidoPor?: string;
+  tramiteId?: string;
+  fechaSubida?: string;
+}
+
+export interface Politica {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  activa?: boolean;
 }
 
 export interface PerfilUpdate {
-  username?: string;
   email?: string;
-  fullName?: string;
-  phone?: string;
 }
 
 export interface PasswordUpdate {
-  currentPassword: string;
   newPassword: string;
+  currentPassword?: string;
+}
+
+// ── Formularios dinámicos ───────────────────────────────────────────────────
+
+export type TipoCampo = 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'DATE'
+                      | 'CHECKLIST' | 'SELECTOR' | 'RADIO' | 'GRID';
+
+export interface ColumnaDef {
+  key: string;
+  label: string;
+  tipo: 'TEXT' | 'NUMBER' | 'DATE' | 'SELECTOR';
+  opciones?: string[];
+}
+
+export interface CampoFormulario {
+  id: string;
+  tipo: TipoCampo;
+  etiqueta: string;
+  placeholder?: string;
+  requerido: boolean;
+  orden: number;
+  opciones?: string[];
+  columnas?: ColumnaDef[];
+}
+
+export interface FormularioPlantilla {
+  id?: string;
+  nombre: string;
+  descripcion?: string;
+  politicaId?: string;
+  nombrePolitica?: string;
+  campos: CampoFormulario[];
+  creadoPor?: string;
+  fechaCreacion?: string;
+  fechaActualizacion?: string;
+}
+
+export interface RespuestaFormulario {
+  id?: string;
+  formularioPlantillaId: string;
+  tramiteId: string;
+  actividadId: string;
+  respondioPorId?: string;
+  respondioPorNombre?: string;
+  valores: Record<string, unknown>;
+  fechaRespuesta?: string;
 }

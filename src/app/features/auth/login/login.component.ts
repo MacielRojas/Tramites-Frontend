@@ -37,10 +37,21 @@ export class LoginComponent {
 
     const { username, password } = this.form.getRawValue();
     this.auth.login({ username, password }).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => {
+        const roles = this.auth.getCurrentUser()?.roles ?? [];
+        if (roles.includes('ROLE_ADMIN')) {
+          this.router.navigate(['/dashboard']);
+        } else if (roles.includes('ROLE_FUNCIONARIO')) {
+          this.router.navigate(['/funcionario/dashboard']);
+        } else if (roles.includes('ROLE_CLIENTE')) {
+          this.router.navigate(['/cliente/dashboard']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
+      },
       error: (err) => {
-        console.error('Login error:', err);
-        this.errorMessage.set(`Error ${err.status}: ${err.error?.message ?? err.message ?? 'Sin respuesta del servidor'}`);
+        const msg = err.error?.message ?? (err.status === 401 ? 'Usuario o contraseña incorrectos.' : 'Error al conectar con el servidor.');
+        this.errorMessage.set(msg);
         this.loading.set(false);
       }
     });

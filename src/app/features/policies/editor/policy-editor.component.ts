@@ -3,18 +3,29 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PolicyService, Policy } from '../../../core/services/policy.service';
 import { IaChatComponent } from './ia-chat/ia-chat.component';
 
 export type NodeType = 'initial' | 'activity' | 'decision' | 'final';
 
+export type TipoCampoNodo = 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'DATE' | 'SELECT' | 'CHECKBOX' | 'FILE';
+
+export interface CampoNodo {
+  id: string;
+  etiqueta: string;
+  tipo: TipoCampoNodo;
+  requerido: boolean;
+}
+
 export interface DiagramNode {
   id: string;
   type: NodeType;
   label: string;
-  x: number; // center x in SVG canvas coords
-  y: number; // center y in SVG canvas coords
+  x: number;
+  y: number;
+  campos?: CampoNodo[];
 }
 
 export interface DiagramEdge {
@@ -47,6 +58,19 @@ export class PolicyEditorComponent implements OnInit {
   private route   = inject(ActivatedRoute);
   private router  = inject(Router);
   private svc     = inject(PolicyService);
+  private http    = inject(HttpClient);
+
+  readonly CAMPO_TIPOS: { value: TipoCampoNodo; label: string }[] = [
+    { value: 'TEXT',     label: 'Texto' },
+    { value: 'TEXTAREA', label: 'Texto largo' },
+    { value: 'NUMBER',   label: 'Número' },
+    { value: 'DATE',     label: 'Fecha' },
+    { value: 'SELECT',   label: 'Lista' },
+    { value: 'CHECKBOX', label: 'Checklist' },
+    { value: 'FILE',     label: 'Archivo' },
+  ];
+
+  camposIaLoading = signal(false);
 
   @ViewChild('svgCanvas') svgRef!: ElementRef<SVGSVGElement>;
 
@@ -424,5 +448,63 @@ export class PolicyEditorComponent implements OnInit {
 
   deleteLane(id: string): void {
     this.diagram.update(d => ({ ...d, lanes: d.lanes.filter(l => l.id !== id) }));
+  }
+
+  // ======== Campo management ========
+
+  addCampo(nodeId: string): void {
+    const campo: CampoNodo = { id: crypto.randomUUID(), etiqueta: '', tipo: 'TEXT', requerido: false };
+    this.diagram.update(d => ({
+      ...d,
+      nodes: d.nodes.map(n => n.id !== nodeId ? n : { ...n, campos: [...(n.campos ?? []), campo] })
+    }));
+  }
+
+  removeCampo(nodeId: string, campoId: string): void {
+    this.diagram.update(d => ({
+      ...d,
+      nodes: d.nodes.map(n => n.id !== nodeId ? n : {
+        ...n, campos: (n.campos ?? []).filter(c => c.id !== campoId)
+      })
+    }));
+  }
+
+  updateCampo(nodeId: string, campoId: string, changes: Partial<CampoNodo>): void {
+    this.diagram.update(d => ({
+      ...d,
+      nodes: d.nodes.map(n => n.id !== nodeId ? n : {
+        ...n, campos: (n.campos ?? []).map(c => c.id !== campoId ? c : { ...c, ...changes })
+      })
+    }));
+  }
+
+  sugerirCamposIA(node: DiagramNode): void {
+    this.camposIaLoading.set(true);
+    this.http.post<{ elementos: Array<{ nombre: string }>; descripcion: string }>(
+      '/ia-svc/api/ia/consulta',
+      {
+        texto: `Sugiere campos de formulario para la actividad administrativa: "${node.label}". Nombra cada campo del formulario como un elemento separado.`,
+        contexto: `Formulario para paso de trámite. Sugiere campos relevantes como datos del solicitante, fechas, documentos requeridos, etc.`
+      }
+    ).subscribe({
+      next: (res) => {
+        const nuevos: CampoNodo[] = (res.elementos ?? []).slice(0, 6).map(el => ({
+          id: crypto.randomUUID(),
+          etiqueta: el.nombre,
+          tipo: 'TEXT' as TipoCampoNodo,
+          requerido: false
+        }));
+        if (nuevos.length > 0) {
+          this.diagram.update(d => ({
+            ...d,
+            nodes: d.nodes.map(n => n.id !== node.id ? n : {
+              ...n, campos: [...(n.campos ?? []), ...nuevos]
+            })
+          }));
+        }
+        this.camposIaLoading.set(false);
+      },
+      error: () => { this.camposIaLoading.set(false); }
+    });
   }
 }

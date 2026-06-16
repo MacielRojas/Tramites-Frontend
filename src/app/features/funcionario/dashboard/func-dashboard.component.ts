@@ -15,9 +15,9 @@ export class FuncDashboardComponent implements OnInit {
   private api    = inject(TramitesApiService);
   private router = inject(Router);
 
-  tramites  = signal<Tramite[]>([]);
-  loading   = signal(true);
-  error     = signal('');
+  tramites     = signal<Tramite[]>([]);
+  loading      = signal(true);
+  error        = signal('');
   filterEstado = signal<TramiteEstado | 'TODOS'>('TODOS');
 
   filtered = computed(() => {
@@ -25,7 +25,7 @@ export class FuncDashboardComponent implements OnInit {
     return f === 'TODOS' ? this.tramites() : this.tramites().filter(t => t.estado === f);
   });
 
-  readonly estados: (TramiteEstado | 'TODOS')[] = ['TODOS','PENDIENTE','EN_PROCESO','COMPLETADO','RECHAZADO'];
+  readonly estados: (TramiteEstado | 'TODOS')[] = ['TODOS', 'PENDIENTE', 'EN_PROCESO', 'COMPLETADO', 'RECHAZADO'];
 
   ngOnInit(): void {
     this.api.getTramitesAsignados().subscribe({
@@ -41,8 +41,7 @@ export class FuncDashboardComponent implements OnInit {
   estadoClass(e: TramiteEstado): string {
     const m: Record<TramiteEstado, string> = {
       PENDIENTE: 'estado--pending', EN_PROCESO: 'estado--process',
-      COMPLETADO: 'estado--done',   RECHAZADO: 'estado--rejected',
-      CANCELADO: 'estado--cancelled'
+      COMPLETADO: 'estado--done', RECHAZADO: 'estado--rejected', CANCELADO: 'estado--cancelled'
     };
     return m[e] ?? '';
   }

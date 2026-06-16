@@ -1,0 +1,58 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Mis Trámites Asignados</h1>
+      <p class="page-subtitle">Gestiona los trámites que te han sido asignados</p>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    @for (e of estados; track e) {
+      <button class="filter-btn" [class.active]="filterEstado() === e" (click)="filterEstado.set(e)">
+        {{ e }}
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <span class="material-symbols-outlined spin">progress_activity</span>
+      <p>Cargando trámites...</p>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert alert--error">
+      <span class="material-symbols-outlined">error</span> {{ error() }}
+    </div>
+  }
+
+  @if (!loading() && !error() && filtered().length === 0) {
+    <div class="empty-state">
+      <span class="material-symbols-outlined">inbox</span>
+      <p>No hay trámites {{ filterEstado() !== 'TODOS' ? 'con estado ' + filterEstado() : 'asignados' }}.</p>
+    </div>
+  }
+
+  <div class="tramites-grid">
+    @for (t of filtered(); track t.id) {
+      <div class="glass-card tramite-card" (click)="openTramite(t.id)">
+        <div class="card-top">
+          <span class="tramite-nombre">{{ t.titulo }}</span>
+          <span class="estado-badge" [ngClass]="estadoClass(t.estado)">{{ t.estado }}</span>
+        </div>
+        @if (t.descripcion) {
+          <p class="tramite-desc">{{ t.descripcion }}</p>
+        }
+        <div class="tramite-footer">
+          <span class="tramite-fecha">
+            <span class="material-symbols-outlined">calendar_today</span>
+            {{ t.fechaInicio | date:'dd/MM/yyyy' }}
+          </span>
+          <span class="ver-mas">Ver detalle <span class="material-symbols-outlined">chevron_right</span></span>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,175 @@
+<div class="form-renderer">
+  @for (campo of sortedCampos(); track campo.id) {
+    <div class="campo-wrapper" [class.campo--required]="campo.requerido">
+      <label class="campo-label">
+        {{ campo.etiqueta }}
+        @if (campo.requerido) { <span class="req-mark">*</span> }
+      </label>
+
+      @switch (campo.tipo) {
+        @case ('TEXT') {
+          <input
+            type="text"
+            class="form-input"
+            [placeholder]="campo.placeholder ?? ''"
+            [disabled]="readOnly"
+            [ngModel]="getValor(campo.id)"
+            (ngModelChange)="setValor(campo.id, $event)" />
+        }
+
+        @case ('TEXTAREA') {
+          <textarea
+            class="form-textarea"
+            rows="3"
+            [placeholder]="campo.placeholder ?? ''"
+            [disabled]="readOnly"
+            [ngModel]="getValor(campo.id)"
+            (ngModelChange)="setValor(campo.id, $event)">
+          </textarea>
+        }
+
+        @case ('NUMBER') {
+          <input
+            type="number"
+            class="form-input"
+            [placeholder]="campo.placeholder ?? ''"
+            [disabled]="readOnly"
+            [ngModel]="getValor(campo.id)"
+            (ngModelChange)="setValor(campo.id, $event)" />
+        }
+
+        @case ('DATE') {
+          <input
+            type="date"
+            class="form-input"
+            [disabled]="readOnly"
+            [ngModel]="getValor(campo.id)"
+            (ngModelChange)="setValor(campo.id, $event)" />
+        }
+
+        @case ('SELECTOR') {
+          <select
+            class="form-select"
+            [disabled]="readOnly"
+            [ngModel]="getValor(campo.id)"
+            (ngModelChange)="setValor(campo.id, $event)">
+            <option value="">-- Seleccionar --</option>
+            @for (opt of campo.opciones; track opt) {
+              <option [value]="opt">{{ opt }}</option>
+            }
+          </select>
+        }
+
+        @case ('RADIO') {
+          <div class="radio-group">
+            @for (opt of campo.opciones; track opt) {
+              <label class="radio-label">
+                <input
+                  type="radio"
+                  [name]="campo.id"
+                  [value]="opt"
+                  [disabled]="readOnly"
+                  [ngModel]="getValor(campo.id)"
+                  (ngModelChange)="setValor(campo.id, $event)" />
+                {{ opt }}
+              </label>
+            }
+          </div>
+        }
+
+        @case ('CHECKLIST') {
+          <div class="checklist-group">
+            @for (opt of campo.opciones; track opt) {
+              <label class="check-label">
+                <input
+                  type="checkbox"
+                  [disabled]="readOnly"
+                  [checked]="isChecked(campo.id, opt)"
+                  (change)="toggleCheck(campo.id, opt, $event)" />
+                {{ opt }}
+              </label>
+            }
+          </div>
+        }
+
+        @case ('GRID') {
+          <div class="grid-wrapper">
+            <div class="grid-scroll">
+              <table class="grid-table">
+                <thead>
+                  <tr>
+                    @for (col of campo.columnas; track col.key) {
+                      <th>{{ col.label }}</th>
+                    }
+                    @if (!readOnly) { <th class="col-actions"></th> }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of getGridRows(campo.id); track $index; let i = $index) {
+                    <tr>
+                      @for (col of campo.columnas; track col.key) {
+                        <td>
+                          @if (col.tipo === 'SELECTOR') {
+                            <select class="grid-cell-input"
+                                    [disabled]="readOnly"
+                                    [ngModel]="row[col.key]"
+                                    (ngModelChange)="setGridCell(campo.id, i, col.key, $event)">
+                              <option value="">--</option>
+                              @for (opt of col.opciones; track opt) {
+                                <option [value]="opt">{{ opt }}</option>
+                              }
+                            </select>
+                          } @else {
+                            <input class="grid-cell-input"
+                                   [type]="colInputType(col.tipo)"
+                                   [disabled]="readOnly"
+                                   [ngModel]="row[col.key]"
+                                   (ngModelChange)="setGridCell(campo.id, i, col.key, $event)" />
+                          }
+                        </td>
+                      }
+                      @if (!readOnly) {
+                        <td>
+                          <button class="btn-icon btn-icon--danger" (click)="removeGridRow(campo.id, i)">
+                            <span class="material-symbols-outlined">delete</span>
+                          </button>
+                        </td>
+                      }
+                    </tr>
+                  }
+                  @if (getGridRows(campo.id).length === 0) {
+                    <tr>
+                      <td [attr.colspan]="(campo.columnas?.length ?? 0) + 1" class="grid-empty">
+                        Sin filas. {{ readOnly ? '' : 'Usa el botón para agregar.' }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (!readOnly) {
+              <button class="btn-add-row" (click)="addGridRow(campo.id)">
+                <span class="material-symbols-outlined">add</span> Agregar fila
+              </button>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+
+  @if (!readOnly && sortedCampos().length > 0) {
+    <div class="submit-row">
+      <button class="btn btn--primary" [disabled]="!isValid()" (click)="submit()">
+        <span class="material-symbols-outlined">send</span> Enviar Formulario
+      </button>
+      @if (!isValid()) {
+        <span class="validation-hint">Completa los campos obligatorios (*)</span>
+      }
+    </div>
+  }
+
+  @if (sortedCampos().length === 0) {
+    <p class="form-empty">Este formulario no tiene campos definidos.</p>
+  }
+</div>

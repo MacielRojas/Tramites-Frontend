@@ -7,18 +7,16 @@
   <!-- Sidebar -->
   <aside class="sidebar glass-card">
     <div class="sidebar-brand">
-      <div class="brand-badge">
-        <span class="material-symbols-outlined">badge</span>
-      </div>
-      <div>
-        <h1 class="brand-name">TramiteFlow</h1>
-        <p class="brand-role">Portal Funcionario</p>
-      </div>
+      <h1 class="brand-name">TramiteFlow</h1>
+      <p class="brand-sub">Panel de Funcionario</p>
     </div>
 
     <nav class="sidebar-nav">
       @for (item of navItems; track item.id) {
-        <a [routerLink]="item.route" routerLinkActive="nav-item--active" class="nav-item">
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="nav-item--active"
+          class="nav-item">
           <span class="material-symbols-outlined nav-icon">{{ item.icon }}</span>
           <span class="nav-label">{{ item.label }}</span>
         </a>
@@ -29,8 +27,8 @@
       <div class="user-card glass-card">
         <div class="user-avatar">{{ userInitials }}</div>
         <div class="user-info">
-          <p class="user-name">{{ currentUser?.username ?? 'Funcionario' }}</p>
-          <p class="user-role-badge">Funcionario</p>
+          <p class="user-name">{{ userName }}</p>
+          <p class="user-role">Funcionario</p>
         </div>
         <button class="btn-logout" (click)="logout()" title="Cerrar sesión">
           <span class="material-symbols-outlined">logout</span>
@@ -42,23 +40,25 @@
   <!-- Main area -->
   <div class="main-area">
     <header class="topbar glass-card">
-      <div class="topbar-title">
+      <div class="topbar-left">
         <span class="material-symbols-outlined topbar-icon">work</span>
-        <span class="topbar-label">Panel de Funcionario</span>
+        <span class="topbar-title">Panel de Funcionario</span>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn"><span class="material-symbols-outlined">notifications</span></button>
-        <button class="icon-btn"><span class="material-symbols-outlined">help_outline</span></button>
+        <button class="icon-btn" aria-label="Notificaciones">
+          <span class="material-symbols-outlined">notifications</span>
+        </button>
+        <button class="icon-btn" aria-label="Ayuda">
+          <span class="material-symbols-outlined">help_outline</span>
+        </button>
         <div class="topbar-divider"></div>
-        <div class="topbar-user">
-          <div class="topbar-avatar">{{ userInitials }}</div>
-          <span class="topbar-username">{{ currentUser?.username ?? 'Funcionario' }}</span>
-        </div>
+        <button class="profile-btn" [routerLink]="'/funcionario/perfil'">
+          <span class="profile-label">{{ userName }}</span>
+          <div class="profile-avatar">{{ userInitials }}</div>
+        </button>
       </div>
     </header>
 
-    <main class="page-content">
-      <router-outlet />
-    </main>
+    <router-outlet />
   </div>
 </div>

@@ -1,0 +1,82 @@
+<div class="page-container">
+  <button class="btn-back" (click)="goBack()">
+    <span class="material-symbols-outlined">arrow_back</span> Volver
+  </button>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <span class="material-symbols-outlined spin">progress_activity</span>
+      <p>Cargando trámite...</p>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert alert--error">
+      <span class="material-symbols-outlined">error</span> {{ error() }}
+    </div>
+  }
+
+  @if (tramite(); as t) {
+    <div class="tramite-header glass-card">
+      <div class="header-content">
+        <div>
+          <h1 class="tramite-nombre">{{ t.titulo }}</h1>
+          @if (t.descripcion) { <p class="tramite-desc">{{ t.descripcion }}</p> }
+          <div class="tramite-meta-row">
+            @if (t.fechaInicio) {
+              <span class="meta-chip">
+                <span class="material-symbols-outlined">calendar_today</span>
+                {{ t.fechaInicio | date:'dd/MM/yyyy' }}
+              </span>
+            }
+          </div>
+        </div>
+        <span class="estado-badge estado-lg" [ngClass]="estadoClass(t.estado)">{{ t.estado }}</span>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <h2>Actividades del Trámite</h2>
+      <span class="count-badge">{{ actividades().length }}</span>
+    </div>
+
+    @if (actividades().length === 0 && !loading()) {
+      <div class="empty-state">
+        <span class="material-symbols-outlined">assignment</span>
+        <p>Este trámite no tiene actividades registradas.</p>
+      </div>
+    }
+
+    <div class="actividades-list">
+      @for (a of actividades(); track a.id) {
+        <div class="glass-card actividad-item" (click)="openActividad(a.id)">
+          <div class="act-icon-wrap" [ngClass]="estadoClass(a.estado)">
+            <span class="material-symbols-outlined">{{ actIcon(a.estado) }}</span>
+          </div>
+          <div class="act-body">
+            <div class="act-top">
+              <span class="act-orden">Paso {{ a.orden }}</span>
+              <span class="act-nombre">{{ a.nombre }}</span>
+            </div>
+            @if (a.descripcion) { <p class="act-desc">{{ a.descripcion }}</p> }
+            @if (a.completadoPorNombre) {
+              <span class="act-resp">
+                <span class="material-symbols-outlined">badge</span> {{ a.completadoPorNombre }}
+              </span>
+            }
+          </div>
+          <div class="act-right">
+            <span class="estado-badge" [ngClass]="estadoClass(a.estado)">{{ a.estado }}</span>
+            <span class="material-symbols-outlined act-arrow">chevron_right</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="docs-action">
+      <button class="btn btn--secondary" [routerLink]="['/funcionario/documentos']" [queryParams]="{tramiteId: t.id}">
+        <span class="material-symbols-outlined">folder_open</span> Ver Documentos
+      </button>
+    </div>
+  }
+</div>

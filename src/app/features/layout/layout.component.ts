@@ -23,7 +23,7 @@ export class AppLayoutComponent {
     { id: 'departamentos', label: 'Departamentos',      icon: 'apartment',      route: '/departamentos' },
     { id: 'usuarios',      label: 'Usuarios',           icon: 'group',          route: '/usuarios' },
     { id: 'monitor',       label: 'Monitor',            icon: 'monitor_heart',  route: '/monitor' },
-    { id: 'configuracion', label: 'Configuración',      icon: 'settings',       route: '/configuracion' },
+    { id: 'formularios',   label: 'Formularios',        icon: 'dynamic_form',   route: '/formularios' },
   ];
 
   get currentUser() { return this.auth.getCurrentUser(); }

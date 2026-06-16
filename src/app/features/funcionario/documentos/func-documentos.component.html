@@ -1,0 +1,86 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Documentos del Trámite</h1>
+      @if (activeTramite()) {
+        <p class="page-subtitle">Trámite: {{ activeTramite() }}</p>
+      }
+    </div>
+    <button class="btn btn--primary" (click)="triggerFile()" [disabled]="!activeTramite()">
+      <span class="material-symbols-outlined">upload</span> Subir Documento
+    </button>
+    <input #fileInput type="file" style="display:none" (change)="onFileSelected($event)" />
+  </div>
+
+  @if (success()) {
+    <div class="alert alert--success">
+      <span class="material-symbols-outlined">check_circle</span> {{ success() }}
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert alert--error">
+      <span class="material-symbols-outlined">error</span> {{ error() }}
+    </div>
+  }
+
+  @if (!activeTramite()) {
+    <div class="empty-state">
+      <span class="material-symbols-outlined">info</span>
+      <p>Navega a un trámite y usa "Ver Documentos" para ver los documentos asociados.</p>
+    </div>
+  }
+
+  <!-- Upload panel -->
+  @if (showUpload() && activeTramite()) {
+    <div class="glass-card upload-panel">
+      <h3><span class="material-symbols-outlined">upload_file</span> Subir nuevo documento</h3>
+      <p class="file-selected">
+        <span class="material-symbols-outlined">attach_file</span>
+        {{ selectedFile()?.name }}
+      </p>
+      <div class="upload-actions">
+        <button class="btn btn--primary" [disabled]="uploading()" (click)="submitUpload()">
+          <span class="material-symbols-outlined">{{ uploading() ? 'progress_activity' : 'cloud_upload' }}</span>
+          {{ uploading() ? 'Subiendo...' : 'Confirmar Subida' }}
+        </button>
+        <button class="btn btn--outline" (click)="showUpload.set(false)">Cancelar</button>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">
+      <span class="material-symbols-outlined spin">progress_activity</span>
+      <p>Cargando documentos...</p>
+    </div>
+  }
+
+  @if (!loading() && activeTramite() && documentos().length === 0) {
+    <div class="empty-state">
+      <span class="material-symbols-outlined">folder_open</span>
+      <p>No hay documentos para este trámite.</p>
+    </div>
+  }
+
+  <div class="docs-grid">
+    @for (doc of documentos(); track doc.id) {
+      <div class="glass-card doc-card">
+        <div class="doc-icon">
+          <span class="material-symbols-outlined">{{ typeIcon(doc.tipo) }}</span>
+        </div>
+        <div class="doc-info">
+          <span class="doc-nombre">{{ doc.nombre }}</span>
+          <span class="doc-meta">{{ doc.tipo }} · {{ formatSize(doc.size) }}</span>
+          <span class="doc-meta">
+            <span class="material-symbols-outlined">person</span>
+            {{ doc.subidoPor }} · {{ doc.fechaSubida | date:'dd/MM/yyyy' }}
+          </span>
+        </div>
+        <button class="btn-icon" (click)="downloadDoc(doc)" title="Descargar">
+          <span class="material-symbols-outlined">download</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>
