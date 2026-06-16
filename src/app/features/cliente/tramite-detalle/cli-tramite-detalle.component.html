@@ -49,6 +49,195 @@
       }
     </div>
 
+    <!-- Formulario de la Política -->
+    <div class="policy-form-section">
+      <h2 class="section-title">
+        <span class="material-symbols-outlined">assignment</span>
+        Formulario del Trámite
+      </h2>
+
+      @if (loadingPlantilla()) {
+        <div class="loading-inline">
+          <span class="material-symbols-outlined spin">progress_activity</span>
+          Cargando formulario...
+        </div>
+      } @else if (politicaPlantilla(); as p) {
+        <div class="glass-card policy-form-card">
+          <div class="pform-header">
+            <span class="material-symbols-outlined pform-icon">assignment_turned_in</span>
+            <div class="pform-header-text">
+              <span class="pform-name">{{ p.nombre }}</span>
+              <span class="pform-count">{{ p.campos.length }} campo(s)</span>
+            </div>
+          </div>
+          @if (p.descripcion) {
+            <p class="pform-desc">{{ p.descripcion }}</p>
+          }
+
+          <div class="pform-inputs">
+            @for (c of p.campos; track c.id) {
+              <div class="pform-field">
+                <label class="pform-field-label">
+                  <span class="material-symbols-outlined">{{ campoIcon(c.tipo) }}</span>
+                  {{ c.etiqueta }}
+                  @if (c.requerido) { <span class="pform-req">*</span> }
+                </label>
+                @switch (c.tipo) {
+                  @case ('TEXTAREA') {
+                    <textarea class="pform-input pform-textarea"
+                      [placeholder]="c.placeholder || ''"
+                      [value]="formValues()[c.id] ?? ''"
+                      (input)="onCampoChange(c.id, $any($event.target).value)"></textarea>
+                  }
+                  @case ('NUMBER') {
+                    <input class="pform-input" type="number"
+                      [placeholder]="c.placeholder || ''"
+                      [value]="formValues()[c.id] ?? ''"
+                      (input)="onCampoChange(c.id, +$any($event.target).value)" />
+                  }
+                  @case ('DATE') {
+                    <input class="pform-input" type="date"
+                      [value]="formValues()[c.id] ?? ''"
+                      (change)="onCampoChange(c.id, $any($event.target).value)" />
+                  }
+                  @case ('SELECTOR') {
+                    <select class="pform-input"
+                      [value]="formValues()[c.id] ?? ''"
+                      (change)="onCampoChange(c.id, $any($event.target).value)">
+                      <option value="">Seleccionar...</option>
+                      @for (op of (c.opciones ?? []); track op) {
+                        <option [value]="op">{{ op }}</option>
+                      }
+                    </select>
+                  }
+                  @case ('CHECKLIST') {
+                    <div class="pform-checklist">
+                      @for (op of (c.opciones ?? []); track op) {
+                        <label class="pform-check-item">
+                          <input type="checkbox"
+                            [checked]="formValues()[c.id + '_' + op]"
+                            (change)="onCampoChange(c.id + '_' + op, $any($event.target).checked)" />
+                          {{ op }}
+                        </label>
+                      }
+                    </div>
+                  }
+                  @default {
+                    <input class="pform-input" type="text"
+                      [placeholder]="c.placeholder || ''"
+                      [value]="formValues()[c.id] ?? ''"
+                      (input)="onCampoChange(c.id, $any($event.target).value)" />
+                  }
+                }
+              </div>
+            }
+          </div>
+
+          @if (formSuccess()) {
+            <p class="pform-ok">
+              <span class="material-symbols-outlined">check_circle</span> {{ formSuccess() }}
+            </p>
+          }
+          @if (formError()) {
+            <p class="pform-err">
+              <span class="material-symbols-outlined">error</span> {{ formError() }}
+            </p>
+          }
+
+          <div class="pform-actions">
+            <button class="btn btn--pform-save" [disabled]="submittingForm()" (click)="submitFormData()">
+              <span class="material-symbols-outlined">
+                {{ submittingForm() ? 'progress_activity' : 'save' }}
+              </span>
+              {{ submittingForm() ? 'Guardando...' : 'Guardar datos' }}
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="glass-card pform-empty">
+          <span class="material-symbols-outlined">assignment_late</span>
+          <p>Esta política no tiene formulario configurado.</p>
+        </div>
+      }
+    </div>
+
+    <!-- Documentos adjuntos -->
+    <div class="docs-section">
+      <h2 class="section-title">
+        <span class="material-symbols-outlined">attach_file</span>
+        Documentos adjuntos
+        <span class="count-badge">{{ documentos().length }}</span>
+      </h2>
+
+      <!-- Upload -->
+      <div class="upload-area glass-card">
+        <div class="upload-header">
+          <span class="material-symbols-outlined upload-icon">cloud_upload</span>
+          <div>
+            <p class="upload-title">Adjuntar documento</p>
+            <p class="upload-hint">PDF, imágenes, Word, Excel y más</p>
+          </div>
+        </div>
+
+        <input #fileInput type="file" style="display:none"
+          (change)="onFileSelected($event)" />
+
+        @if (!selectedFile()) {
+          <button class="btn btn--upload" (click)="triggerFile()">
+            <span class="material-symbols-outlined">upload_file</span>
+            Seleccionar archivo
+          </button>
+        } @else {
+          <div class="upload-confirm">
+            <span class="material-symbols-outlined">{{ typeIcon(selectedFile()!.type) }}</span>
+            <span class="upload-name">{{ selectedFile()!.name }}</span>
+            <button class="btn btn--primary-sm" [disabled]="uploading()" (click)="uploadDoc()">
+              <span class="material-symbols-outlined">{{ uploading() ? 'progress_activity' : 'check' }}</span>
+              {{ uploading() ? 'Subiendo...' : 'Adjuntar' }}
+            </button>
+            <button class="btn btn--ghost-sm" (click)="selectedFile.set(null)">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        }
+
+        @if (docSuccess()) {
+          <p class="doc-ok"><span class="material-symbols-outlined">check_circle</span> {{ docSuccess() }}</p>
+        }
+        @if (docError()) {
+          <p class="doc-err"><span class="material-symbols-outlined">error</span> {{ docError() }}</p>
+        }
+      </div>
+
+      <!-- Lista de documentos -->
+      @if (documentos().length === 0) {
+        <div class="docs-empty">
+          <span class="material-symbols-outlined">folder_open</span>
+          <p>Aún no has adjuntado documentos a este trámite.</p>
+        </div>
+      } @else {
+        <div class="docs-list">
+          @for (d of documentos(); track d.id) {
+            <div class="doc-item glass-card">
+              <span class="doc-type-icon material-symbols-outlined">{{ typeIcon(d.tipo) }}</span>
+              <div class="doc-info">
+                <span class="doc-name">{{ d.nombre }}</span>
+                @if (d.fechaSubida || d.size) {
+                  <span class="doc-meta">
+                    @if (d.fechaSubida) { {{ d.fechaSubida | date:'dd/MM/yyyy HH:mm' }} }
+                    @if (d.size) { · {{ formatSize(d.size) }} }
+                  </span>
+                }
+              </div>
+              <button class="doc-download-btn" (click)="downloadDoc(d)" title="Descargar">
+                <span class="material-symbols-outlined">download</span>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
     <!-- Actividades -->
     <h2 class="section-title">
       <span class="material-symbols-outlined">assignment</span>

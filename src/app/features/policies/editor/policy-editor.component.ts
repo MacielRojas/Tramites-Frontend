@@ -6,6 +6,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PolicyService, Policy } from '../../../core/services/policy.service';
+import { FormularioService } from '../../../core/services/formulario.service';
+import { CampoFormulario, TipoCampo } from '../../../core/models/api.models';
 import { IaChatComponent } from './ia-chat/ia-chat.component';
 
 export type NodeType = 'initial' | 'activity' | 'decision' | 'final';
@@ -55,10 +57,11 @@ export interface DiagramData {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PolicyEditorComponent implements OnInit {
-  private route   = inject(ActivatedRoute);
-  private router  = inject(Router);
-  private svc     = inject(PolicyService);
-  private http    = inject(HttpClient);
+  private route    = inject(ActivatedRoute);
+  private router   = inject(Router);
+  private svc      = inject(PolicyService);
+  private formSvc  = inject(FormularioService);
+  private http     = inject(HttpClient);
 
   readonly CAMPO_TIPOS: { value: TipoCampoNodo; label: string }[] = [
     { value: 'TEXT',     label: 'Texto' },
@@ -71,6 +74,7 @@ export class PolicyEditorComponent implements OnInit {
   ];
 
   camposIaLoading = signal(false);
+  editLaneId      = signal<string | null>(null);
 
   @ViewChild('svgCanvas') svgRef!: ElementRef<SVGSVGElement>;
 
@@ -385,7 +389,8 @@ export class PolicyEditorComponent implements OnInit {
       nombre:      this.policyName(),
       descripcion: this.policyDesc(),
       activa:      activate ? true : p.activa,
-      diagramJson: JSON.stringify(this.diagram())
+      diagramJson: JSON.stringify(this.diagram()),
+      pasos:       this.extractPasos()
     };
     this.svc.update(p.id, updated).subscribe({
       next: (res) => {
@@ -393,9 +398,100 @@ export class PolicyEditorComponent implements OnInit {
         this.saving.set(false);
         this.saveOk.set(true);
         setTimeout(() => this.saveOk.set(false), 2000);
+        this.syncFormulario(p.id!, this.policyName());
       },
       error: () => this.saving.set(false)
     });
+  }
+
+  private extractPasos() {
+    const d = this.diagram();
+    const actNodes = d.nodes.filter(n => n.type === 'activity');
+    const ordered  = this.orderActivityNodes(actNodes, d);
+    return ordered.map((node, i) => ({
+      orden:            i + 1,
+      nombre:           node.label || `Paso ${i + 1}`,
+      descripcion:      '',
+      rolRequerido:     '',
+      departamentoId:   '',
+      nombreDepartamento: '',
+      obligatorio:      true,
+      formulario: (node.campos ?? []).map(c => ({
+        id:       c.id,
+        etiqueta: c.etiqueta || 'Campo',
+        tipo:     c.tipo,
+        requerido: c.requerido,
+        opciones:  [],
+        valor:     ''
+      }))
+    }));
+  }
+
+  private orderActivityNodes(actNodes: DiagramNode[], d: DiagramData): DiagramNode[] {
+    const initial = d.nodes.find(n => n.type === 'initial');
+    if (!initial) return [...actNodes].sort((a, b) => a.x - b.x);
+
+    const actSet  = new Set(actNodes.map(n => n.id));
+    const visited = new Set<string>();
+    const result: DiagramNode[] = [];
+    const queue   = [initial.id];
+
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      if (visited.has(curr)) continue;
+      visited.add(curr);
+      if (actSet.has(curr)) result.push(actNodes.find(n => n.id === curr)!);
+      d.edges.filter(e => e.fromId === curr && !visited.has(e.toId))
+             .forEach(e => queue.push(e.toId));
+    }
+    actNodes.forEach(n => { if (!visited.has(n.id)) result.push(n); });
+    return result;
+  }
+
+  private syncFormulario(policyId: string, policyName: string): void {
+    const campos = this.collectCampos();
+    if (campos.length === 0) return;
+    this.formSvc.getByPoliticaId(policyId).subscribe({
+      next: (existing) => {
+        this.formSvc.update(existing.id!, {
+          ...existing,
+          nombre: `Formulario – ${policyName}`,
+          campos,
+        }).subscribe();
+      },
+      error: () => {
+        this.formSvc.create({
+          nombre: `Formulario – ${policyName}`,
+          politicaId: policyId,
+          campos,
+        }).subscribe();
+      }
+    });
+  }
+
+  private collectCampos(): CampoFormulario[] {
+    const result: CampoFormulario[] = [];
+    let orden = 0;
+    for (const node of this.diagram().nodes) {
+      if (node.type !== 'activity' || !node.campos?.length) continue;
+      for (const c of node.campos) {
+        result.push({
+          id: c.id,
+          tipo: this.mapTipoCampo(c.tipo),
+          etiqueta: c.etiqueta || 'Campo',
+          requerido: c.requerido,
+          orden: orden++,
+        });
+      }
+    }
+    return result;
+  }
+
+  private mapTipoCampo(t: TipoCampoNodo): TipoCampo {
+    if (t === 'SELECT')   return 'SELECTOR';
+    if (t === 'CHECKBOX') return 'CHECKLIST';
+    if (t === 'FILE')     return 'TEXT';
+    return t as TipoCampo;
   }
 
   onIaApply(newDiagram: DiagramData): void {
@@ -448,6 +544,15 @@ export class PolicyEditorComponent implements OnInit {
 
   deleteLane(id: string): void {
     this.diagram.update(d => ({ ...d, lanes: d.lanes.filter(l => l.id !== id) }));
+  }
+
+  editLane(id: string, event?: MouseEvent): void {
+    event?.stopPropagation();
+    this.editLaneId.set(id);
+    setTimeout(() => {
+      const inp = this.svgRef?.nativeElement.querySelector<HTMLInputElement>('.lane-svg-input');
+      if (inp) { inp.focus(); inp.select(); }
+    }, 40);
   }
 
   // ======== Campo management ========

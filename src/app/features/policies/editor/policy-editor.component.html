@@ -149,18 +149,36 @@
                       [attr.x2]="svgW" [attr.y2]="(i + 1) * LANE_H"
                       stroke="rgba(200,180,185,0.35)" stroke-width="1"/>
                 <rect [attr.x]="0" [attr.y]="i * LANE_H" [attr.width]="LABEL_W" [attr.height]="LANE_H"
-                      fill="rgba(248,168,185,0.07)" stroke="none"/>
+                      fill="rgba(248,168,185,0.07)" stroke="none"
+                      style="cursor:text" (click)="editLane(lane.id, $event)"/>
                 <line [attr.x1]="LABEL_W" [attr.y1]="i * LANE_H"
                       [attr.x2]="LABEL_W" [attr.y2]="(i + 1) * LANE_H"
                       stroke="rgba(200,180,185,0.4)" stroke-width="1"/>
-                <text
-                  [attr.x]="LABEL_W / 2"
-                  [attr.y]="i * LANE_H + LANE_H / 2"
-                  text-anchor="middle" dominant-baseline="middle"
-                  font-family="DM Sans, sans-serif" font-size="12" font-weight="600"
-                  fill="#524346" opacity="0.7"
-                  [attr.transform]="'rotate(-90,' + (LABEL_W/2) + ',' + (i*LANE_H + LANE_H/2) + ')'"
-                >{{ lane.label }}</text>
+                @if (editLaneId() === lane.id) {
+                  <foreignObject
+                    [attr.x]="LABEL_W/2 - LANE_H/2"
+                    [attr.y]="i * LANE_H + LANE_H/2 - LABEL_W/2"
+                    [attr.width]="LANE_H"
+                    [attr.height]="LABEL_W"
+                    [attr.transform]="'rotate(-90,' + (LABEL_W/2) + ',' + (i*LANE_H + LANE_H/2) + ')'">
+                    <input class="lane-svg-input" type="text"
+                      [value]="lane.label"
+                      (change)="updateLaneLabel(lane.id, $any($event.target).value)"
+                      (blur)="editLaneId.set(null)"
+                      (keydown.enter)="$any($event.target).blur()"
+                      (keydown.escape)="$any($event.target).blur()" />
+                  </foreignObject>
+                } @else {
+                  <text
+                    [attr.x]="LABEL_W / 2"
+                    [attr.y]="i * LANE_H + LANE_H / 2"
+                    text-anchor="middle" dominant-baseline="middle"
+                    font-family="DM Sans, sans-serif" font-size="12" font-weight="600"
+                    fill="#524346" opacity="0.7" style="cursor:text"
+                    [attr.transform]="'rotate(-90,' + (LABEL_W/2) + ',' + (i*LANE_H + LANE_H/2) + ')'"
+                    (click)="editLane(lane.id, $event)"
+                  >{{ lane.label }}</text>
+                }
               </g>
             }
             <line x1="0" y1="0" [attr.x2]="svgW" y2="0" stroke="rgba(200,180,185,0.4)" stroke-width="1"/>
@@ -179,19 +197,36 @@
                 <!-- Header background -->
                 <rect [attr.x]="i * LANE_W_VERT" [attr.y]="0"
                       [attr.width]="LANE_W_VERT" [attr.height]="LABEL_H_VERT"
-                      fill="rgba(248,168,185,0.08)" stroke="none"/>
+                      fill="rgba(248,168,185,0.08)" stroke="none"
+                      style="cursor:text" (click)="editLane(lane.id, $event)"/>
                 <!-- Header bottom border -->
                 <line [attr.x1]="i * LANE_W_VERT" [attr.y1]="LABEL_H_VERT"
                       [attr.x2]="(i + 1) * LANE_W_VERT" [attr.y2]="LABEL_H_VERT"
                       stroke="rgba(200,180,185,0.4)" stroke-width="1"/>
                 <!-- Lane label (horizontal, centered at top) -->
-                <text
-                  [attr.x]="i * LANE_W_VERT + LANE_W_VERT / 2"
-                  [attr.y]="LABEL_H_VERT / 2"
-                  text-anchor="middle" dominant-baseline="middle"
-                  font-family="DM Sans, sans-serif" font-size="12" font-weight="600"
-                  fill="#524346" opacity="0.7"
-                >{{ lane.label }}</text>
+                @if (editLaneId() === lane.id) {
+                  <foreignObject
+                    [attr.x]="i * LANE_W_VERT + 4"
+                    [attr.y]="2"
+                    [attr.width]="LANE_W_VERT - 8"
+                    [attr.height]="LABEL_H_VERT - 4">
+                    <input class="lane-svg-input" type="text"
+                      [value]="lane.label"
+                      (change)="updateLaneLabel(lane.id, $any($event.target).value)"
+                      (blur)="editLaneId.set(null)"
+                      (keydown.enter)="$any($event.target).blur()"
+                      (keydown.escape)="$any($event.target).blur()" />
+                  </foreignObject>
+                } @else {
+                  <text
+                    [attr.x]="i * LANE_W_VERT + LANE_W_VERT / 2"
+                    [attr.y]="LABEL_H_VERT / 2"
+                    text-anchor="middle" dominant-baseline="middle"
+                    font-family="DM Sans, sans-serif" font-size="12" font-weight="600"
+                    fill="#524346" opacity="0.7" style="cursor:text"
+                    (click)="editLane(lane.id, $event)"
+                  >{{ lane.label }}</text>
+                }
               </g>
             }
             <!-- Top border & left border -->

@@ -33,20 +33,159 @@
         </div>
         <span class="estado-badge estado-lg" [ngClass]="estadoClass(t.estado)">{{ t.estado }}</span>
       </div>
+
+      <!-- Acciones de estado -->
+      <div class="estado-actions">
+        <span class="actions-label">Cambiar estado:</span>
+        <div class="action-btns">
+          <button class="action-btn action-btn--accept"
+            [disabled]="cambiandoEstado() || t.estado === 'EN_PROCESO'"
+            (click)="cambiarEstado('EN_PROCESO')">
+            <span class="material-symbols-outlined">play_circle</span>
+            En Proceso
+          </button>
+          <button class="action-btn action-btn--pending"
+            [disabled]="cambiandoEstado() || t.estado === 'PENDIENTE'"
+            (click)="cambiarEstado('PENDIENTE')">
+            <span class="material-symbols-outlined">hourglass_empty</span>
+            Pendiente
+          </button>
+          <button class="action-btn action-btn--done"
+            [disabled]="cambiandoEstado() || t.estado === 'COMPLETADO'"
+            (click)="cambiarEstado('COMPLETADO')">
+            <span class="material-symbols-outlined">check_circle</span>
+            Completado
+          </button>
+          <button class="action-btn action-btn--reject"
+            [disabled]="cambiandoEstado() || t.estado === 'RECHAZADO'"
+            (click)="cambiarEstado('RECHAZADO')">
+            <span class="material-symbols-outlined">cancel</span>
+            Rechazar
+          </button>
+        </div>
+        @if (estadoMsg()) {
+          <p class="estado-ok">
+            <span class="material-symbols-outlined">check_circle</span> {{ estadoMsg() }}
+          </p>
+        }
+        @if (estadoError()) {
+          <p class="estado-err">
+            <span class="material-symbols-outlined">error</span> {{ estadoError() }}
+          </p>
+        }
+      </div>
     </div>
+
+    <!-- Formulario de la Política -->
+    @if (loadingPlantilla()) {
+      <div class="loading-inline">
+        <span class="material-symbols-outlined spin">progress_activity</span>
+        Cargando formulario...
+      </div>
+    } @else if (politicaPlantilla(); as p) {
+      <div class="glass-card func-form-section">
+        <div class="func-form-header">
+          <span class="material-symbols-outlined">assignment_turned_in</span>
+          <div>
+            <span class="func-form-name">{{ p.nombre }}</span>
+            <span class="func-form-count">{{ p.campos.length }} campo(s)</span>
+          </div>
+        </div>
+
+        <div class="func-form-inputs">
+          @for (c of p.campos; track c.id) {
+            <div class="func-field">
+              <label class="func-field-label">
+                <span class="material-symbols-outlined">{{ campoIcon(c.tipo) }}</span>
+                {{ c.etiqueta }}
+                @if (c.requerido) { <span class="func-req">*</span> }
+              </label>
+              @switch (c.tipo) {
+                @case ('TEXTAREA') {
+                  <textarea class="func-input func-textarea"
+                    [placeholder]="c.placeholder || ''"
+                    [value]="formValues()[c.id] ?? ''"
+                    (input)="onCampoChange(c.id, $any($event.target).value)"></textarea>
+                }
+                @case ('NUMBER') {
+                  <input class="func-input" type="number"
+                    [placeholder]="c.placeholder || ''"
+                    [value]="formValues()[c.id] ?? ''"
+                    (input)="onCampoChange(c.id, +$any($event.target).value)" />
+                }
+                @case ('DATE') {
+                  <input class="func-input" type="date"
+                    [value]="formValues()[c.id] ?? ''"
+                    (change)="onCampoChange(c.id, $any($event.target).value)" />
+                }
+                @case ('SELECTOR') {
+                  <select class="func-input"
+                    [value]="formValues()[c.id] ?? ''"
+                    (change)="onCampoChange(c.id, $any($event.target).value)">
+                    <option value="">Seleccionar...</option>
+                    @for (op of (c.opciones ?? []); track op) {
+                      <option [value]="op">{{ op }}</option>
+                    }
+                  </select>
+                }
+                @case ('CHECKLIST') {
+                  <div class="func-checklist">
+                    @for (op of (c.opciones ?? []); track op) {
+                      <label class="func-check-item">
+                        <input type="checkbox"
+                          [checked]="formValues()[c.id + '_' + op]"
+                          (change)="onCampoChange(c.id + '_' + op, $any($event.target).checked)" />
+                        {{ op }}
+                      </label>
+                    }
+                  </div>
+                }
+                @default {
+                  <input class="func-input" type="text"
+                    [placeholder]="c.placeholder || ''"
+                    [value]="formValues()[c.id] ?? ''"
+                    (input)="onCampoChange(c.id, $any($event.target).value)" />
+                }
+              }
+            </div>
+          }
+        </div>
+
+        @if (formSuccess()) {
+          <p class="func-form-ok">
+            <span class="material-symbols-outlined">check_circle</span> {{ formSuccess() }}
+          </p>
+        }
+        @if (formError()) {
+          <p class="func-form-err">
+            <span class="material-symbols-outlined">error</span> {{ formError() }}
+          </p>
+        }
+
+        <div class="func-form-actions">
+          <button class="btn btn--form-save" [disabled]="submittingForm()" (click)="submitFormData()">
+            <span class="material-symbols-outlined">
+              {{ submittingForm() ? 'progress_activity' : 'save' }}
+            </span>
+            {{ submittingForm() ? 'Guardando...' : 'Guardar datos del formulario' }}
+          </button>
+        </div>
+      </div>
+    }
 
     <div class="section-header">
       <h2>Actividades del Trámite</h2>
       <span class="count-badge">{{ actividades().length }}</span>
     </div>
 
-    @if (actividades().length === 0 && !loading()) {
+    @if (actividades().length === 0 && politicaPasos().length === 0 && !loading()) {
       <div class="empty-state">
         <span class="material-symbols-outlined">assignment</span>
         <p>Este trámite no tiene actividades registradas.</p>
       </div>
     }
 
+    <!-- Actividades reales del trámite -->
     <div class="actividades-list">
       @for (a of actividades(); track a.id) {
         <div class="glass-card actividad-item" (click)="openActividad(a.id)">
@@ -73,10 +212,102 @@
       }
     </div>
 
-    <div class="docs-action">
-      <button class="btn btn--secondary" [routerLink]="['/funcionario/documentos']" [queryParams]="{tramiteId: t.id}">
-        <span class="material-symbols-outlined">folder_open</span> Ver Documentos
-      </button>
+    <!-- Pasos de la política (fallback cuando no hay actividades generadas aún) -->
+    @if (actividades().length === 0 && politicaPasos().length > 0) {
+      <div class="pasos-preview-note">
+        <span class="material-symbols-outlined">info</span>
+        Pasos definidos en la política (las actividades se generan al guardar/publicar la política):
+      </div>
+      <div class="actividades-list">
+        @for (paso of politicaPasos(); track paso.orden) {
+          <div class="glass-card actividad-item actividad-item--preview">
+            <div class="act-icon-wrap estado--pending">
+              <span class="material-symbols-outlined">radio_button_unchecked</span>
+            </div>
+            <div class="act-body">
+              <div class="act-top">
+                <span class="act-orden">Paso {{ paso.orden }}</span>
+                <span class="act-nombre">{{ paso.nombre }}</span>
+              </div>
+              @if (paso.descripcion) { <p class="act-desc">{{ paso.descripcion }}</p> }
+              @if (paso.formulario?.length) {
+                <span class="act-campos-hint">
+                  <span class="material-symbols-outlined">list_alt</span>
+                  {{ paso.formulario!.length }} campo(s) de formulario
+                </span>
+              }
+            </div>
+            <div class="act-right">
+              <span class="estado-badge estado--pending">PENDIENTE</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Documentos -->
+    <div class="docs-section">
+      <div class="section-header">
+        <h2>Documentos</h2>
+        <span class="count-badge">{{ documentos().length }}</span>
+      </div>
+
+      <!-- Upload -->
+      <div class="upload-area">
+        <input #fileInput type="file" style="display:none"
+          (change)="onFileSelected($event)" />
+        @if (!selectedFile()) {
+          <button class="btn btn--secondary" (click)="triggerFile()">
+            <span class="material-symbols-outlined">upload_file</span>
+            Subir documento
+          </button>
+        } @else {
+          <div class="upload-confirm">
+            <span class="material-symbols-outlined">{{ typeIcon(selectedFile()!.type) }}</span>
+            <span class="upload-name">{{ selectedFile()!.name }}</span>
+            <button class="btn btn--primary" [disabled]="uploading()" (click)="uploadDoc()">
+              <span class="material-symbols-outlined">{{ uploading() ? 'progress_activity' : 'cloud_upload' }}</span>
+              {{ uploading() ? 'Subiendo...' : 'Confirmar' }}
+            </button>
+            <button class="btn btn--ghost" (click)="selectedFile.set(null)">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        }
+        @if (docSuccess()) {
+          <p class="doc-ok"><span class="material-symbols-outlined">check_circle</span> {{ docSuccess() }}</p>
+        }
+        @if (docError()) {
+          <p class="doc-err"><span class="material-symbols-outlined">error</span> {{ docError() }}</p>
+        }
+      </div>
+
+      @if (documentos().length === 0) {
+        <div class="docs-empty">
+          <span class="material-symbols-outlined">folder_open</span>
+          <p>No hay documentos adjuntos.</p>
+        </div>
+      } @else {
+        <div class="docs-list">
+          @for (d of documentos(); track d.id) {
+            <div class="doc-item glass-card">
+              <span class="doc-type-icon material-symbols-outlined">{{ typeIcon(d.tipo) }}</span>
+              <div class="doc-info">
+                <span class="doc-name">{{ d.nombre }}</span>
+                @if (d.fechaSubida || d.size) {
+                  <span class="doc-meta">
+                    @if (d.fechaSubida) { {{ d.fechaSubida | date:'dd/MM/yyyy HH:mm' }} }
+                    @if (d.size) { · {{ formatSize(d.size) }} }
+                  </span>
+                }
+              </div>
+              <button class="doc-download-btn" (click)="downloadDoc(d)" title="Descargar">
+                <span class="material-symbols-outlined">download</span>
+              </button>
+            </div>
+          }
+        </div>
+      }
     </div>
   }
 </div>

@@ -39,6 +39,85 @@
 .form-textarea { resize: vertical; }
 .char-count { display: block; text-align: right; font-size: .72rem; color: #bbb; margin-top: .2rem; }
 
+.loading-inline {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .82rem; color: var(--on-surface-variant, #666); margin-top: .25rem;
+  .material-symbols-outlined { font-size: 1rem; }
+  .spin { animation: spin .9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+}
+
+.form-preview {
+  margin-top: .75rem;
+  padding: .875rem 1rem;
+  border-radius: 12px;
+  background: rgba(139,75,90,0.05);
+  border: 1px solid rgba(139,75,90,0.18);
+}
+
+.preview-header {
+  display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem;
+  font-size: .85rem; color: var(--primary, #8b4b5a);
+  .material-symbols-outlined { font-size: 1.1rem; }
+  strong { flex: 1; }
+}
+
+.preview-count {
+  font-size: .75rem; font-weight: 600;
+  background: rgba(139,75,90,0.12); color: var(--primary, #8b4b5a);
+  padding: .1rem .45rem; border-radius: 9999px;
+}
+
+.preview-desc {
+  font-size: .78rem; color: #888; margin: 0 0 .5rem; font-style: italic;
+}
+
+.preview-fields {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .3rem;
+}
+
+.preview-field {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .82rem; color: #555;
+}
+
+.preview-field-icon {
+  font-size: .95rem; color: var(--primary, #8b4b5a); opacity: .75; flex-shrink: 0;
+}
+
+.preview-field-label { flex: 1; }
+
+.preview-req {
+  font-size: .68rem; font-weight: 700; color: var(--primary, #8b4b5a);
+  background: rgba(139,75,90,0.1); padding: .05rem .35rem; border-radius: 6px;
+}
+
+.preview-fields-form {
+  display: flex; flex-direction: column; gap: .75rem; margin-top: .5rem;
+}
+
+.pf-field { display: flex; flex-direction: column; gap: .25rem; }
+
+.pf-label {
+  font-size: .8rem; color: #555; font-weight: 500;
+}
+.pf-req { color: var(--primary, #8b4b5a); margin-left: .15rem; }
+
+.pf-input {
+  width: 100%; border: 1.5px solid rgba(139,75,90,.2); border-radius: 8px;
+  padding: .45rem .7rem; font-family: 'DM Sans', sans-serif; font-size: .85rem;
+  background: rgba(255,255,255,.7); box-sizing: border-box;
+  &:focus { outline: none; border-color: var(--primary, #8b4b5a); }
+}
+.pf-textarea { resize: vertical; min-height: 64px; }
+
+.pf-checklist { display: flex; flex-direction: column; gap: .25rem; }
+.pf-check-item {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .83rem; color: #555; cursor: pointer;
+  input[type=checkbox] { accent-color: var(--primary, #8b4b5a); }
+}
+
 .form-actions {
   display: flex; justify-content: flex-end; gap: .75rem;
   margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid rgba(0,0,0,.06);

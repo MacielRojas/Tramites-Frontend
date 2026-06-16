@@ -34,12 +34,80 @@
             <span class="material-symbols-outlined spin">progress_activity</span> Cargando políticas...
           </p>
         } @else {
-          <select class="form-select" [(ngModel)]="form.politicaId">
+          <select class="form-select"
+            [ngModel]="form.politicaId"
+            (ngModelChange)="onPoliticaChange($event)">
             <option value="">Selecciona una política</option>
             @for (p of politicas(); track p.id) {
               <option [value]="p.id">{{ p.nombre }}</option>
             }
           </select>
+        }
+
+        <!-- Preview del formulario requerido -->
+        @if (loadingPlantilla()) {
+          <p class="loading-inline" style="margin-top:.5rem">
+            <span class="material-symbols-outlined spin">progress_activity</span>
+            Cargando formulario requerido...
+          </p>
+        } @else if (plantilla(); as p) {
+          <div class="form-preview">
+            <div class="preview-header">
+              <span class="material-symbols-outlined">assignment</span>
+              <strong>{{ p.nombre }}</strong>
+              <span class="preview-count">{{ p.campos.length }} campo(s)</span>
+            </div>
+            @if (p.descripcion) {
+              <p class="preview-desc">{{ p.descripcion }}</p>
+            }
+            <div class="preview-fields-form">
+              @for (c of p.campos; track c.id) {
+                <div class="pf-field">
+                  <label class="pf-label">
+                    {{ c.etiqueta }}
+                    @if (c.requerido) { <span class="pf-req">*</span> }
+                  </label>
+                  @switch (c.tipo) {
+                    @case ('TEXTAREA') {
+                      <textarea class="pf-input pf-textarea" [placeholder]="c.placeholder || ''"
+                        (input)="onCampoChange(c.id, $any($event.target).value)"></textarea>
+                    }
+                    @case ('NUMBER') {
+                      <input class="pf-input" type="number" [placeholder]="c.placeholder || ''"
+                        (input)="onCampoChange(c.id, $any($event.target).value)" />
+                    }
+                    @case ('DATE') {
+                      <input class="pf-input" type="date"
+                        (change)="onCampoChange(c.id, $any($event.target).value)" />
+                    }
+                    @case ('SELECTOR') {
+                      <select class="pf-input"
+                        (change)="onCampoChange(c.id, $any($event.target).value)">
+                        <option value="">Seleccionar...</option>
+                        @for (op of (c.opciones ?? []); track op) {
+                          <option [value]="op">{{ op }}</option>
+                        }
+                      </select>
+                    }
+                    @case ('CHECKLIST') {
+                      <div class="pf-checklist">
+                        @for (op of (c.opciones ?? []); track op) {
+                          <label class="pf-check-item">
+                            <input type="checkbox" (change)="onCampoChange(c.id + '_' + op, $any($event.target).checked)" />
+                            {{ op }}
+                          </label>
+                        }
+                      </div>
+                    }
+                    @default {
+                      <input class="pf-input" type="text" [placeholder]="c.placeholder || ''"
+                        (input)="onCampoChange(c.id, $any($event.target).value)" />
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
         }
       </div>
 

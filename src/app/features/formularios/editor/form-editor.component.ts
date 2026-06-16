@@ -54,24 +54,29 @@ export class FormEditorComponent implements OnInit {
 
   ngOnInit(): void {
     this.api.getPoliticas().subscribe({
-      next: p => this.politicas.set(p),
-      error: () => {}
+      next: politicas => {
+        this.politicas.set(politicas);
+        if (this.editId) this.loadFormulario(this.editId);
+      },
+      error: () => {
+        if (this.editId) this.loadFormulario(this.editId);
+      }
     });
+  }
 
-    if (this.editId) {
-      this.loading.set(true);
-      this.formSvc.getById(this.editId).subscribe({
-        next: f => {
-          this.nombre.set(f.nombre);
-          this.descripcion.set(f.descripcion ?? '');
-          this.politicaId.set(f.politicaId ?? '');
-          this.nombrePolitica.set(f.nombrePolitica ?? '');
-          this.campos.set(f.campos ?? []);
-          this.loading.set(false);
-        },
-        error: () => { this.error.set('No se pudo cargar el formulario.'); this.loading.set(false); }
-      });
-    }
+  private loadFormulario(id: string): void {
+    this.loading.set(true);
+    this.formSvc.getById(id).subscribe({
+      next: f => {
+        this.nombre.set(f.nombre);
+        this.descripcion.set(f.descripcion ?? '');
+        this.politicaId.set(f.politicaId ?? '');
+        this.nombrePolitica.set(f.nombrePolitica ?? '');
+        this.campos.set(f.campos ?? []);
+        this.loading.set(false);
+      },
+      error: () => { this.error.set('No se pudo cargar el formulario.'); this.loading.set(false); }
+    });
   }
 
   // ── Canvas interactions ─────────────────────────────────────────────────────

@@ -2,6 +2,24 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+export interface PasoPolicy {
+  orden: number;
+  nombre: string;
+  descripcion?: string;
+  rolRequerido?: string;
+  departamentoId?: string;
+  nombreDepartamento?: string;
+  obligatorio?: boolean;
+  formulario?: Array<{
+    id?: string;
+    etiqueta: string;
+    tipo: string;
+    requerido?: boolean;
+    opciones?: string[];
+    valor?: string;
+  }>;
+}
+
 export interface Policy {
   id?: string;
   nombre: string;
@@ -11,7 +29,7 @@ export interface Policy {
   creadoPor?: string;
   fechaCreacion?: string;
   fechaActualizacion?: string;
-  pasos?: unknown[];
+  pasos?: PasoPolicy[];
 }
 
 @Injectable({ providedIn: 'root' })

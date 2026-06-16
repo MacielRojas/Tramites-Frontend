@@ -28,7 +28,7 @@ export class FuncDashboardComponent implements OnInit {
   readonly estados: (TramiteEstado | 'TODOS')[] = ['TODOS', 'PENDIENTE', 'EN_PROCESO', 'COMPLETADO', 'RECHAZADO'];
 
   ngOnInit(): void {
-    this.api.getTramitesAsignados().subscribe({
+    this.api.getAllTramites().subscribe({
       next:  t  => { this.tramites.set(t); this.loading.set(false); },
       error: () => { this.error.set('No se pudieron cargar los trámites.'); this.loading.set(false); }
     });

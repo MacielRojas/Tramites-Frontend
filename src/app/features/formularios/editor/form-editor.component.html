@@ -10,11 +10,11 @@
              [value]="nombre()" (input)="nombre.set($any($event.target).value)" />
 
       <select class="select-politica"
-              [value]="politicaId()"
-              (change)="onPoliticaChange($any($event.target).value)">
+              [ngModel]="politicaId()"
+              (ngModelChange)="onPoliticaChange($event)">
         <option value="">Sin política asociada</option>
         @for (p of politicas(); track p.id) {
-          <option [value]="p.id">{{ p.nombre }}</option>
+          <option [value]="p.id" [selected]="p.id === politicaId()">{{ p.nombre }}</option>
         }
       </select>
 

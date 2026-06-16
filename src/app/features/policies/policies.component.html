@@ -46,7 +46,7 @@
     } @else {
       <div class="policies-grid">
         @for (policy of policies(); track policy.id) {
-          <div class="policy-card glass-card" (click)="editPolicy(policy.id!)">
+          <div class="policy-card glass-card" (click)="openDetail(policy)">
             <div class="policy-card-header">
               <div class="policy-icon">
                 <span class="material-symbols-outlined">account_tree</span>
@@ -73,7 +73,11 @@
             </div>
 
             <div class="policy-actions">
-              <button class="action-btn action-btn--edit" (click)="editPolicy(policy.id!)">
+              <button class="action-btn action-btn--view" (click)="openDetail(policy, $event)">
+                <span class="material-symbols-outlined">visibility</span>
+                Ver detalles
+              </button>
+              <button class="action-btn action-btn--edit" (click)="editPolicy(policy.id!, $event)">
                 <span class="material-symbols-outlined">edit</span>
                 Editar
               </button>
@@ -87,3 +91,110 @@
     }
   }
 </div>
+
+<!-- ═══ PANEL DE DETALLE ═══ -->
+@if (detailPolicy(); as policy) {
+  <div class="detail-overlay" (click)="closeDetail()">
+    <aside class="detail-drawer glass-card" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="drawer-header">
+        <div class="drawer-header-left">
+          <div class="drawer-icon">
+            <span class="material-symbols-outlined">account_tree</span>
+          </div>
+          <div>
+            <h2 class="drawer-title">{{ policy.nombre }}</h2>
+            <span class="status-badge" [class.status-badge--active]="policy.activa" [class.status-badge--draft]="!policy.activa">
+              {{ policy.activa ? 'Activa' : 'Borrador' }}
+            </span>
+          </div>
+        </div>
+        <button class="drawer-close" (click)="closeDetail()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="drawer-body">
+
+        @if (policy.descripcion) {
+          <div class="drawer-section">
+            <p class="drawer-section-label">Descripción</p>
+            <p class="drawer-text">{{ policy.descripcion }}</p>
+          </div>
+        }
+
+        <div class="drawer-meta-row">
+          @if (policy.fechaCreacion) {
+            <div class="drawer-meta-item">
+              <span class="material-symbols-outlined">calendar_today</span>
+              {{ formatDate(policy.fechaCreacion) }}
+            </div>
+          }
+          @if (policy.creadoPor) {
+            <div class="drawer-meta-item">
+              <span class="material-symbols-outlined">person</span>
+              {{ policy.creadoPor }}
+            </div>
+          }
+        </div>
+
+        <!-- Formulario asociado -->
+        <div class="drawer-section">
+          <p class="drawer-section-label">
+            <span class="material-symbols-outlined">assignment</span>
+            Formulario asociado
+          </p>
+
+          @if (detailLoading()) {
+            <div class="drawer-loading">
+              <span class="material-symbols-outlined spin">progress_activity</span>
+              Cargando formulario...
+            </div>
+          } @else if (detailPlantilla(); as p) {
+            <div class="form-detail-card">
+              <div class="form-detail-header">
+                <strong>{{ p.nombre }}</strong>
+                <span class="campo-count-badge">{{ p.campos.length }} campo(s)</span>
+              </div>
+              @if (p.descripcion) {
+                <p class="form-detail-desc">{{ p.descripcion }}</p>
+              }
+              <ul class="campos-list">
+                @for (c of p.campos; track c.id) {
+                  <li class="campo-item">
+                    <span class="campo-icon material-symbols-outlined">{{ campoIcon(c.tipo) }}</span>
+                    <div class="campo-info">
+                      <span class="campo-etiqueta">{{ c.etiqueta }}</span>
+                      <span class="campo-tipo-chip">{{ c.tipo }}</span>
+                    </div>
+                    @if (c.requerido) {
+                      <span class="campo-req-badge">Req.</span>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          } @else {
+            <div class="no-form">
+              <span class="material-symbols-outlined">assignment_late</span>
+              <p>Esta política no tiene formulario asociado.</p>
+              <p class="no-form-hint">Abre el editor, añade campos a las actividades y guarda para crear el formulario automáticamente.</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="drawer-footer">
+        <button class="drawer-btn drawer-btn--secondary" (click)="closeDetail()">Cerrar</button>
+        <button class="drawer-btn drawer-btn--primary" (click)="editPolicy(policy.id!, $event)">
+          <span class="material-symbols-outlined">edit</span>
+          Editar en diagrama
+        </button>
+      </div>
+
+    </aside>
+  </div>
+}

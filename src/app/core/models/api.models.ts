@@ -12,6 +12,7 @@ export interface Tramite {
   fechaInicio?: string;
   fechaFin?: string;
   fechaActualizacion?: string;
+  datos?: Record<string, unknown>;
 }
 
 export interface Actividad {

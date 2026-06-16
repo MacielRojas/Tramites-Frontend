@@ -2,6 +2,8 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { PolicyService, Policy } from '../../core/services/policy.service';
+import { FormularioService } from '../../core/services/formulario.service';
+import { FormularioPlantilla, TipoCampo, CampoFormulario } from '../../core/models/api.models';
 
 @Component({
   selector: 'app-policies',
@@ -12,12 +14,18 @@ import { PolicyService, Policy } from '../../core/services/policy.service';
 })
 export class PoliciesComponent implements OnInit {
   private policyService = inject(PolicyService);
-  private router = inject(Router);
+  private formSvc       = inject(FormularioService);
+  private router        = inject(Router);
 
-  policies = signal<Policy[]>([]);
-  loading = signal(true);
-  creating = signal(false);
-  error = signal('');
+  policies      = signal<Policy[]>([]);
+  loading       = signal(true);
+  creating      = signal(false);
+  error         = signal('');
+
+  // ── Detail panel ──
+  detailPolicy    = signal<Policy | null>(null);
+  detailPlantilla = signal<FormularioPlantilla | null>(null);
+  detailLoading   = signal(false);
 
   ngOnInit(): void {
     this.load();
@@ -68,8 +76,89 @@ export class PoliciesComponent implements OnInit {
     });
   }
 
-  editPolicy(id: string): void {
+  openDetail(policy: Policy, event?: MouseEvent): void {
+    event?.stopPropagation();
+    this.detailPolicy.set(policy);
+    this.detailPlantilla.set(null);
+    this.detailLoading.set(true);
+
+    this.formSvc.getByPoliticaId(policy.id!).subscribe({
+      next: p => {
+        this.detailPlantilla.set(p);
+        this.detailLoading.set(false);
+      },
+      error: () => {
+        // No hay FormularioPlantilla → intentar auto-crear desde diagramJson
+        this.autoSyncFromDiagram(policy);
+      }
+    });
+  }
+
+  private autoSyncFromDiagram(policy: Policy): void {
+    this.policyService.getById(policy.id!).subscribe({
+      next: fullPolicy => {
+        const campos = this.extractCamposFromDiagram(fullPolicy.diagramJson);
+        if (campos.length === 0) {
+          this.detailLoading.set(false);
+          return;
+        }
+        const plantilla: FormularioPlantilla = {
+          nombre: `Formulario – ${policy.nombre}`,
+          politicaId: policy.id!,
+          campos
+        };
+        this.formSvc.create(plantilla).subscribe({
+          next: p => { this.detailPlantilla.set(p); this.detailLoading.set(false); },
+          error: () => { this.detailLoading.set(false); }
+        });
+      },
+      error: () => { this.detailLoading.set(false); }
+    });
+  }
+
+  private extractCamposFromDiagram(diagramJson?: string): CampoFormulario[] {
+    if (!diagramJson) return [];
+    try {
+      const diagram = JSON.parse(diagramJson);
+      const nodes: any[] = diagram.nodes ?? [];
+      const campos: CampoFormulario[] = [];
+      nodes
+        .filter((n: any) => n.type === 'action' && Array.isArray(n.campos) && n.campos.length > 0)
+        .forEach((n: any) => {
+          n.campos.forEach((c: any) => {
+            campos.push({
+              id: c.id,
+              etiqueta: c.etiqueta,
+              tipo: this.mapTipoCampo(c.tipo),
+              requerido: c.requerido ?? false,
+              orden: campos.length + 1
+            });
+          });
+        });
+      return campos;
+    } catch { return []; }
+  }
+
+  private mapTipoCampo(t: string): TipoCampo {
+    if (t === 'SELECT')   return 'SELECTOR';
+    if (t === 'CHECKBOX') return 'CHECKLIST';
+    if (t === 'FILE')     return 'TEXT';
+    return t as TipoCampo;
+  }
+
+  closeDetail(): void { this.detailPolicy.set(null); }
+
+  editPolicy(id: string, event?: MouseEvent): void {
+    event?.stopPropagation();
     this.router.navigate(['/politicas/editor', id]);
+  }
+
+  campoIcon(tipo: TipoCampo): string {
+    const m: Record<string, string> = {
+      TEXT: 'text_fields', TEXTAREA: 'notes', NUMBER: 'pin', DATE: 'calendar_today',
+      CHECKLIST: 'checklist', SELECTOR: 'list', RADIO: 'radio_button_checked', GRID: 'table_chart',
+    };
+    return m[tipo] ?? 'input';
   }
 
   deletePolicy(id: string, event: MouseEvent): void {

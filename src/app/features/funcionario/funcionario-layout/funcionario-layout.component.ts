@@ -14,9 +14,8 @@ export class FuncionarioLayoutComponent {
   private auth = inject(AuthService);
 
   navItems = [
-    { id: 'dashboard',   label: 'Mis Trámites',  icon: 'assignment',      route: '/funcionario/dashboard' },
-    { id: 'documentos',  label: 'Documentos',     icon: 'folder_open',     route: '/funcionario/documentos' },
-    { id: 'perfil',      label: 'Mi Perfil',      icon: 'manage_accounts', route: '/funcionario/perfil' },
+    { id: 'dashboard', label: 'Trámites',  icon: 'assignment',      route: '/funcionario/dashboard' },
+    { id: 'perfil',    label: 'Mi Perfil', icon: 'manage_accounts', route: '/funcionario/perfil' },
   ];
 
   get currentUser() { return this.auth.getCurrentUser(); }

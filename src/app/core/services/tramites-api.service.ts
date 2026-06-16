@@ -24,6 +24,15 @@ export class TramitesApiService {
       .pipe(map((r: any) => Array.isArray(r) ? r : (r.content ?? [])));
   }
 
+  getAllTramites(): Observable<Tramite[]> {
+    return this.http.get<PagedResponse<Tramite> | Tramite[]>(`${this.base}/tramites`)
+      .pipe(map((r: any) => Array.isArray(r) ? r : (r.content ?? [])));
+  }
+
+  cambiarEstadoTramite(id: string, estado: string, comentario = ''): Observable<Tramite> {
+    return this.http.patch<Tramite>(`${this.base}/tramites/${id}/estado`, { estado, comentario });
+  }
+
   // ── Trámites (Cliente) ────────────────────────────────
   getMisTramites(): Observable<Tramite[]> {
     return this.http.get<PagedResponse<Tramite> | Tramite[]>(`${this.base}/tramites/mis-tramites`)
@@ -35,15 +44,24 @@ export class TramitesApiService {
     return this.http.get<Tramite>(`${this.base}/tramites/${id}`);
   }
 
-  createTramite(politicaId: string, titulo: string, descripcion: string): Observable<Tramite> {
+  createTramite(politicaId: string, titulo: string, descripcion: string,
+                datos: Record<string, unknown> = {}): Observable<Tramite> {
     return this.http.post<Tramite>(`${this.base}/tramites`, {
-      titulo, descripcion, politicaId, datos: {}
+      titulo, descripcion, politicaId, datos
     });
+  }
+
+  updateTramiteDatos(tramiteId: string, datos: Record<string, unknown>): Observable<Tramite> {
+    return this.http.patch<Tramite>(`${this.base}/tramites/${tramiteId}/datos`, datos);
   }
 
   // ── Políticas ─────────────────────────────────────────
   getPoliticas(): Observable<Politica[]> {
     return this.http.get<Politica[]>(`${this.base}/politicas?soloActivas=true`);
+  }
+
+  getPoliticaById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.base}/politicas/${id}`);
   }
 
   // ── Actividades ───────────────────────────────────────

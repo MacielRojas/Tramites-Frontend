@@ -131,11 +131,14 @@ export class IaChatComponent implements AfterViewChecked {
   // ── REEMPLAZAR: distribución uniforme en todo el canvas ───────────────────
 
   replaceWithResult(result: IaResult): void {
-    const merged = this.mergeLanes(result.swimlanes);
-    const nodes  = this.distributeNodes(result.elementos, merged, 0, this.canvasW(), this.canvasH());
-    const edges  = this.chainEdges(nodes);
-    this.applyDiagram.emit({ lanes: merged, nodes, edges });
-    this.pushConfirm(`✓ Diagrama reemplazado con la sugerencia IA (${nodes.length} nodos).`);
+    // Use only the IA-suggested lanes (fresh names), ignoring existing ones
+    const lanes: SwimLane[] = result.swimlanes.length > 0
+      ? result.swimlanes.map(label => ({ id: `l${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, label }))
+      : this.diagram.lanes;
+    const nodes = this.distributeNodes(result.elementos, lanes, 0, this.canvasW(), this.canvasH());
+    const edges = this.chainEdges(nodes);
+    this.applyDiagram.emit({ lanes, nodes, edges });
+    this.pushConfirm(`✓ Diagrama reemplazado con la sugerencia IA (${nodes.length} nodos, ${lanes.length} carriles).`);
   }
 
   // ── AÑADIR: posicionar después de los nodos existentes, sin duplicados ────
