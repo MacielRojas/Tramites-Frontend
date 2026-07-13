@@ -2,7 +2,7 @@ import { Component, inject, signal, Input, Output, EventEmitter, ViewChild, Elem
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { DiagramData, DiagramNode, DiagramEdge, SwimLane, NodeType } from '../policy-editor.component';
+import { DiagramData, DiagramNode, DiagramEdge, SwimLane, NodeType, TipoCampoNodo } from '../policy-editor.component';
 
 interface IaElemento {
   id: string;
@@ -10,6 +10,7 @@ interface IaElemento {
   nombre: string;
   swimlane: string;
   orden: number;
+  campos?: any[];
 }
 
 interface IaResult {
@@ -123,9 +124,20 @@ export class IaChatComponent implements AfterViewChecked {
 
   private buildContext(): string {
     const d = this.diagram;
-    const lanes = d.lanes.map(l => l.label).join(', ');
-    const nodes = d.nodes.map(n => `${n.type}:"${n.label}"`).join(', ');
-    return `Carriles: [${lanes}]. Nodos existentes: [${nodes || 'ninguno'}]. Conexiones: ${d.edges.length}.`;
+    const nodesInfo = d.nodes.map(n => {
+      const camposStr = n.campos && n.campos.length > 0
+        ? ` (campos: ${n.campos.map(c => `${c.etiqueta}[${c.tipo}]`).join(', ')})`
+        : '';
+      return `${n.id}(${n.type}:"${n.label}"${camposStr})`;
+    }).join(', ');
+
+    const edgesInfo = d.edges.map(e => {
+      const fromNode = d.nodes.find(n => n.id === e.fromId);
+      const toNode = d.nodes.find(n => n.id === e.toId);
+      return fromNode && toNode ? `"${fromNode.label}" -> "${toNode.label}"` : '';
+    }).filter(Boolean).join(', ');
+
+    return `Diagrama actual:\n- Carriles: [${d.lanes.map(l => l.label).join(', ')}]\n- Nodos: [${nodesInfo}]\n- Conexiones: [${edgesInfo}]`;
   }
 
   // ── REEMPLAZAR: distribución uniforme en todo el canvas ───────────────────
@@ -215,7 +227,13 @@ export class IaChatComponent implements AfterViewChecked {
         id:    `ia_${el.id}_${Date.now() + i}`,
         type:  this.mapType(el.tipo),
         label: el.nombre,
-        x, y
+        x, y,
+        campos: (el.campos ?? []).map((c: any) => ({
+          id: `c_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          etiqueta: c.etiqueta || c.nombre || 'Campo',
+          tipo: (c.tipo ?? 'TEXT').toUpperCase() as TipoCampoNodo,
+          requerido: !!c.requerido
+        }))
       };
     });
   }

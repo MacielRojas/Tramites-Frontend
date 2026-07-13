@@ -28,7 +28,7 @@
         <span class="stat-badge stat-badge--success">+12%</span>
       </div>
       <p class="stat-label">Total de Trámites</p>
-      <h3 class="stat-value">1,284</h3>
+      <h3 class="stat-value">{{ totalTramitesDb() > 0 ? totalTramitesDb() : '1,284' }}</h3>
     </div>
 
     <div class="stat-card glass-card">
@@ -39,7 +39,10 @@
         <span class="stat-badge stat-badge--down">-5%</span>
       </div>
       <p class="stat-label">Tiempo Prom. Proceso</p>
-      <h3 class="stat-value">4.2 <span class="stat-unit">Días</span></h3>
+      <h3 class="stat-value">
+        {{ duracionPromedioDb() > 0 ? (duracionPromedioDb() | number:'1.1-1') : '4.2' }}
+        <span class="stat-unit">{{ duracionPromedioDb() > 0 ? 'Horas' : 'Días' }}</span>
+      </h3>
     </div>
 
     <div class="stat-card glass-card">
@@ -61,7 +64,7 @@
         <span class="stat-badge stat-badge--success">+2%</span>
       </div>
       <p class="stat-label">Acciones Pendientes</p>
-      <h3 class="stat-value">42</h3>
+      <h3 class="stat-value">{{ actividadesPendientesDb() > 0 ? actividadesPendientesDb() : '42' }}</h3>
     </div>
   </section>
 
@@ -133,8 +136,164 @@
     </div>
   </section>
 
-  <!-- Department efficiency -->
+  <!-- IA BOTTLE-NECK ANALYSIS SECTION -->
   <section class="dept-section glass-card">
+    <div class="table-header" style="background: rgba(139, 75, 90, 0.05);">
+      <h4 class="card-title" style="display: flex; align-items: center; gap: 0.5rem; color: var(--primary);">
+        <span class="material-symbols-outlined">auto_awesome</span>
+        Análisis de Cuellos de Botella por IA
+      </h4>
+      <span class="stat-badge stat-badge--stable" style="background: rgba(139, 75, 90, 0.15);">Groq Llama-3.3</span>
+    </div>
+    
+    <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+      @if (loadingIa()) {
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--on-surface-variant);">
+          <span class="material-symbols-outlined spin">progress_activity</span>
+          <span>Analizando flujos del sistema...</span>
+        </div>
+      } @else {
+        <!-- Resumen ejecutivo -->
+        <div style="padding: 1.25rem; border-radius: 16px; background: rgba(255,255,255,0.4); border-left: 4px solid var(--primary); font-size: 14px; line-height: 1.5; color: var(--on-surface);">
+          <strong>Resumen de la IA:</strong> {{ iaResumen() }}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <!-- Eficiencia global -->
+          <div style="padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.2);">
+            <p style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--on-surface-variant);">Eficiencia del SLA</p>
+            <p style="font-size: 14px; margin-top: 0.25rem; font-weight: 500;">{{ iaEficiencia() }}</p>
+          </div>
+          <!-- Tramite crítico -->
+          <div style="padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.2);">
+            <p style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--on-surface-variant);">Trámite Más Lento</p>
+            <p style="font-size: 14px; margin-top: 0.25rem; font-weight: 600; color: var(--primary);">{{ iaTramiteCritico() }}</p>
+          </div>
+        </div>
+
+        <!-- Tabla de cuellos de botella -->
+        @if (iaCuellos().length > 0) {
+          <div style="margin-top: 1rem;">
+            <p style="font-size: 12px; font-weight: 600; color: var(--on-surface-variant); text-transform: uppercase; margin-bottom: 0.5rem;">Cuellos de Botella Detectados</p>
+            <div class="dept-table-wrapper" style="border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;">
+              <table class="dept-table">
+                <thead>
+                  <tr>
+                    <th>Trámite / Actividad</th>
+                    <th>Nivel</th>
+                    <th>Motivo del Retraso</th>
+                    <th>Recomendación de la IA</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of iaCuellos(); track c.tramite) {
+                    <tr>
+                      <td style="font-weight: 500;">{{ c.tramite }}</td>
+                      <td>
+                        <span class="stat-badge" [class.stat-badge--error]="c.nivel === 'CRÍTICO'" [class.stat-badge--success]="c.nivel !== 'CRÍTICO'" style="font-size: 9px;">
+                          {{ c.nivel }}
+                        </span>
+                      </td>
+                      <td style="font-size: 13px; color: var(--on-surface-variant);">{{ c.motivo }} <br><small style="color: var(--primary);">{{ c.impacto }}</small></td>
+                      <td style="font-size: 13px; font-weight: 500; color: #3b6045;">{{ c.recomendacion }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <!-- Alertas y sugerencias de Swimlanes -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 0.5rem;">
+          <!-- Recomendaciones swimlane -->
+          <div style="padding: 1.25rem; border-radius: 16px; background: rgba(93, 98, 55, 0.05); border-top: 3px solid var(--secondary);">
+            <h5 style="font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--secondary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">split_scene</span>
+              Optimización de Swimlanes (Roles)
+            </h5>
+            <ul style="padding-left: 1.2rem; margin: 0; font-size: 13px; line-height: 1.6; color: var(--on-surface);">
+              @for (rec of iaRecomendaciones(); track rec) {
+                <li style="margin-bottom: 0.35rem;">{{ rec }}</li>
+              }
+            </ul>
+          </div>
+          
+          <!-- Alertas críticas -->
+          <div style="padding: 1.25rem; border-radius: 16px; background: rgba(198, 40, 40, 0.05); border-top: 3px solid var(--error);">
+            <h5 style="font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--error); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">warning</span>
+              Alertas del Sistema
+            </h5>
+            <ul style="padding-left: 1.2rem; margin: 0; font-size: 13px; line-height: 1.6; color: var(--on-surface);">
+              @for (alt of iaAlertas(); track alt) {
+                <li style="margin-bottom: 0.35rem;">{{ alt }}</li>
+              }
+              @if (iaAlertas().length === 0) {
+                <li style="color: var(--on-surface-variant); list-style: none;">No se detectaron alertas operacionales críticas.</li>
+              }
+            </ul>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- TENSORFLOW ANOMALY SIMULATOR SECTION -->
+  <section class="dept-section glass-card" style="margin-top: 1.5rem;">
+    <div class="table-header" style="background: rgba(46, 125, 50, 0.05);">
+      <h4 class="card-title" style="display: flex; align-items: center; gap: 0.5rem; color: #2e7d32;">
+        <span class="material-symbols-outlined">developer_board</span>
+        Simulador de Anomalías de Trámites (TensorFlow)
+      </h4>
+      <span class="stat-badge stat-badge--stable" style="background: rgba(46, 125, 50, 0.15); color: #2e7d32;">Autoencoder Neuronal</span>
+    </div>
+    
+    <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+      <p style="font-size: 13px; color: var(--on-surface-variant); line-height: 1.4;">
+        Esta red neuronal local evalúa si el tiempo de ejecución real de una actividad representa una anomalía respecto al SLA esperado, utilizando la pérdida de reconstrucción del autoencoder.
+      </p>
+      
+      <div style="display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
+        <div style="display: flex; flex-direction: column; gap: 0.35rem; width: 180px;">
+          <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--on-surface-variant);">Tiempo Objetivo (horas)</label>
+          <input type="number" style="padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15); font-size: 14px; background: rgba(255,255,255,0.7);"
+                 [ngModel]="tfTiempoEsperado()" (ngModelChange)="tfTiempoEsperado.set($event)" min="1" max="100"/>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.35rem; width: 180px;">
+          <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--on-surface-variant);">Tiempo Ejecutado (horas)</label>
+          <input type="number" style="padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15); font-size: 14px; background: rgba(255,255,255,0.7);"
+                 [ngModel]="tfTiempoActual()" (ngModelChange)="tfTiempoActual.set($event)" min="1" max="500"/>
+        </div>
+        <button class="btn-primary" [disabled]="tfLoading()" (click)="probarTensorflowAnomalia()" style="background: #2e7d32; box-shadow: 0 4px 14px rgba(46,125,50,0.3); height: 38px;">
+          <span class="material-symbols-outlined">{{ tfLoading() ? 'progress_activity' : 'bolt' }}</span>
+          {{ tfLoading() ? 'Calculando...' : 'Evaluar con TensorFlow' }}
+        </button>
+      </div>
+
+      <!-- Resultado de la anomalía -->
+      @if (tfAnomaliaResultado(); as res) {
+        <div style="margin-top: 0.5rem; padding: 1.25rem; border-radius: 16px; border: 1px solid rgba(0,0,0,0.05);"
+             [style.background]="res.es_anomalia ? 'rgba(198, 40, 40, 0.04)' : 'rgba(46, 125, 50, 0.04)'"
+             [style.border-left-width]="'4px'"
+             [style.border-left-color]="res.es_anomalia ? 'var(--error)' : '#2e7d32'">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 0.4rem;" [style.color]="res.es_anomalia ? 'var(--error)' : '#2e7d32'">
+              <span class="material-symbols-outlined">{{ res.es_anomalia ? 'report' : 'check_circle' }}</span>
+              {{ res.es_anomalia ? 'ANOMALÍA DETECTADA' : 'TIEMPO DENTRO DEL RANGO' }}
+            </span>
+            <span class="stat-badge" [class.stat-badge--error]="res.es_anomalia" [class.stat-badge--success]="!res.es_anomalia">
+              Score: {{ res.score }}
+            </span>
+          </div>
+          <p style="font-size: 13px; color: var(--on-surface); line-height: 1.4;">{{ res.mensaje }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Department efficiency -->
+  <section class="dept-section glass-card" style="margin-top: 1.5rem;">
     <div class="table-header">
       <h4 class="card-title">Eficiencia por Departamento</h4>
       <button class="link-btn">Ver Todos</button>

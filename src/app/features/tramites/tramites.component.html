@@ -183,7 +183,7 @@
 
       <div class="modal-footer">
         <button class="btn-cancel" (click)="showNewModal.set(false)">Cancelar</button>
-        <button class="btn-confirm" (click)="submitNew()" [disabled]="!newForm.name?.trim() || !newForm.clientName?.trim()">
+        <button class="btn-confirm" (click)="submitNew()" [disabled]="!newForm.name?.trim() || !newForm.clientName.trim()">
           <span class="material-symbols-outlined">add</span>
           Crear Trámite
         </button>

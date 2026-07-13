@@ -18,7 +18,7 @@ export interface Tramite {
   priority?: 'Alta' | 'Media' | 'Baja';
 }
 
-const COLORS = ['#8b4b5a','#5d6237','#2e7d8c','#c4748a','#7b5ea7','#4a7c59'];
+const COLORS = ['#8b4b5a', '#5d6237', '#2e7d8c', '#c4748a', '#7b5ea7', '#4a7c59'];
 
 @Component({
   selector: 'app-tramites',
@@ -29,29 +29,29 @@ const COLORS = ['#8b4b5a','#5d6237','#2e7d8c','#c4748a','#7b5ea7','#4a7c59'];
 })
 export class TramitesComponent {
   stats = [
-    { label: 'Total Activos',   value: '124',  icon: 'folder_open', note: '12% más que el mes pasado',   notePositive: true  },
-    { label: 'Pendientes',      value: '42',   icon: 'pending',     note: 'Requiere atención inmediata', notePositive: false },
-    { label: 'Completados Hoy', value: '18',   icon: 'task_alt',    note: 'Tasa de éxito del 89%',       notePositive: true  },
-    { label: 'Tiempo Promedio', value: '4.2d', icon: 'schedule',    note: 'Eficiencia mejorada',         notePositive: true  },
+    { label: 'Total Activos', value: '124', icon: 'folder_open', note: '12% más que el mes pasado', notePositive: true },
+    { label: 'Pendientes', value: '42', icon: 'pending', note: 'Requiere atención inmediata', notePositive: false },
+    { label: 'Completados Hoy', value: '18', icon: 'task_alt', note: 'Tasa de éxito del 89%', notePositive: true },
+    { label: 'Tiempo Promedio', value: '4.2d', icon: 'schedule', note: 'Eficiencia mejorada', notePositive: true },
   ];
 
   tramitesList = signal<Tramite[]>([
-    { id: '#TF-9042', name: 'Licencia de Apertura',       subtitle: 'Expediente Urbanístico A-22',  clientName: 'Elena Alarcón',   clientInitials: 'EA', clientColor: '#8b4b5a', status: 'En Proceso', date: '12 Oct 2024', description: 'Trámite para obtener la licencia de apertura de un local comercial en el centro urbano.', responsible: 'Dept. Urbanismo',  priority: 'Alta'  },
-    { id: '#TF-9038', name: 'Renovación Pasaporte',       subtitle: 'Trámite Consular Urgente',     clientName: 'Ricardo Mendoza', clientInitials: 'RM', clientColor: '#5d6237', status: 'Completado', date: '11 Oct 2024', description: 'Renovación de pasaporte con carácter urgente por viaje internacional inmediato.',       responsible: 'Oficina Consular', priority: 'Alta'  },
-    { id: '#TF-9035', name: 'Visado de Estudios',         subtitle: 'Documentación Académica',      clientName: 'Sofía Luna',      clientInitials: 'SL', clientColor: '#2e7d8c', status: 'Pendiente',  date: '10 Oct 2024', description: 'Solicitud de visado de estudios para programa universitario en el extranjero.',         responsible: 'Dept. Exterior',   priority: 'Media' },
-    { id: '#TF-9031', name: 'Alta Seguridad Social',      subtitle: 'Régimen Autónomos',            clientName: 'Mateo García',    clientInitials: 'MG', clientColor: '#c4748a', status: 'En Proceso', date: '09 Oct 2024', description: 'Alta en el sistema de seguridad social como trabajador autónomo, régimen especial.',     responsible: 'Dept. Social',     priority: 'Media' },
-    { id: '#TF-9029', name: 'Certificado de Residencia',  subtitle: 'Trámite Municipal',            clientName: 'Carla Valdés',    clientInitials: 'CV', clientColor: '#7b5ea7', status: 'Completado', date: '08 Oct 2024', description: 'Emisión de certificado oficial de residencia para trámites administrativos.',             responsible: 'Ayuntamiento',     priority: 'Baja'  },
-    { id: '#TF-9026', name: 'Permiso de Obras',           subtitle: 'Reforma Interior Local',       clientName: 'Antonio Ruiz',    clientInitials: 'AR', clientColor: '#5d6237', status: 'Pendiente',  date: '07 Oct 2024', description: 'Solicitud de permiso municipal para reforma interior de local en zona protegida.',         responsible: 'Dept. Urbanismo',  priority: 'Alta'  },
-    { id: '#TF-9023', name: 'Inscripción Registro Civil', subtitle: 'Nacimiento — Prov. Madrid',    clientName: 'Laura Moreno',    clientInitials: 'LM', clientColor: '#8b4b5a', status: 'Completado', date: '06 Oct 2024', description: 'Inscripción de nacimiento en el Registro Civil de la Provincia de Madrid.',               responsible: 'Registro Civil',   priority: 'Baja'  },
-    { id: '#TF-9019', name: 'Licencia Actividad',         subtitle: 'Comercio Minorista Sector B',  clientName: 'Pedro Ibáñez',    clientInitials: 'PI', clientColor: '#2e7d8c', status: 'En Proceso', date: '05 Oct 2024', description: 'Licencia de actividad para apertura de comercio minorista en zona comercial Sector B.',   responsible: 'Dept. Comercio',   priority: 'Media' },
+    { id: '#TF-9042', name: 'Licencia de Apertura', subtitle: 'Expediente Urbanístico A-22', clientName: 'Elena Alarcón', clientInitials: 'EA', clientColor: '#8b4b5a', status: 'En Proceso', date: '12 Oct 2024', description: 'Trámite para obtener la licencia de apertura de un local comercial en el centro urbano.', responsible: 'Dept. Urbanismo', priority: 'Alta' },
+    { id: '#TF-9038', name: 'Renovación Pasaporte', subtitle: 'Trámite Consular Urgente', clientName: 'Ricardo Mendoza', clientInitials: 'RM', clientColor: '#5d6237', status: 'Completado', date: '11 Oct 2024', description: 'Renovación de pasaporte con carácter urgente por viaje internacional inmediato.', responsible: 'Oficina Consular', priority: 'Alta' },
+    { id: '#TF-9035', name: 'Visado de Estudios', subtitle: 'Documentación Académica', clientName: 'Sofía Luna', clientInitials: 'SL', clientColor: '#2e7d8c', status: 'Pendiente', date: '10 Oct 2024', description: 'Solicitud de visado de estudios para programa universitario en el extranjero.', responsible: 'Dept. Exterior', priority: 'Media' },
+    { id: '#TF-9031', name: 'Alta Seguridad Social', subtitle: 'Régimen Autónomos', clientName: 'Mateo García', clientInitials: 'MG', clientColor: '#c4748a', status: 'En Proceso', date: '09 Oct 2024', description: 'Alta en el sistema de seguridad social como trabajador autónomo, régimen especial.', responsible: 'Dept. Social', priority: 'Media' },
+    { id: '#TF-9029', name: 'Certificado de Residencia', subtitle: 'Trámite Municipal', clientName: 'Carla Valdés', clientInitials: 'CV', clientColor: '#7b5ea7', status: 'Completado', date: '08 Oct 2024', description: 'Emisión de certificado oficial de residencia para trámites administrativos.', responsible: 'Ayuntamiento', priority: 'Baja' },
+    { id: '#TF-9026', name: 'Permiso de Obras', subtitle: 'Reforma Interior Local', clientName: 'Antonio Ruiz', clientInitials: 'AR', clientColor: '#5d6237', status: 'Pendiente', date: '07 Oct 2024', description: 'Solicitud de permiso municipal para reforma interior de local en zona protegida.', responsible: 'Dept. Urbanismo', priority: 'Alta' },
+    { id: '#TF-9023', name: 'Inscripción Registro Civil', subtitle: 'Nacimiento — Prov. Madrid', clientName: 'Laura Moreno', clientInitials: 'LM', clientColor: '#8b4b5a', status: 'Completado', date: '06 Oct 2024', description: 'Inscripción de nacimiento en el Registro Civil de la Provincia de Madrid.', responsible: 'Registro Civil', priority: 'Baja' },
+    { id: '#TF-9019', name: 'Licencia Actividad', subtitle: 'Comercio Minorista Sector B', clientName: 'Pedro Ibáñez', clientInitials: 'PI', clientColor: '#2e7d8c', status: 'En Proceso', date: '05 Oct 2024', description: 'Licencia de actividad para apertura de comercio minorista en zona comercial Sector B.', responsible: 'Dept. Comercio', priority: 'Media' },
   ]);
 
-  filterStatus   = signal<TramiteStatus | 'Todos'>('Todos');
-  showFilter     = signal(false);
-  showNewModal   = signal(false);
-  showDetail     = signal(false);
+  filterStatus = signal<TramiteStatus | 'Todos'>('Todos');
+  showFilter = signal(false);
+  showNewModal = signal(false);
+  showDetail = signal(false);
   selectedTramite = signal<Tramite | null>(null);
-  currentPage    = signal(1);
+  currentPage = signal(1);
   readonly PAGE_SIZE = 5;
   private nextNum = 9000;
 
@@ -67,7 +67,7 @@ export class TramitesComponent {
     return s === 'Todos' ? this.tramitesList() : this.tramitesList().filter(t => t.status === s);
   });
 
-  totalPages  = computed(() => Math.ceil(this.filteredTramites().length / this.PAGE_SIZE));
+  totalPages = computed(() => Math.ceil(this.filteredTramites().length / this.PAGE_SIZE));
   pagedTramites = computed(() => {
     const start = (this.currentPage() - 1) * this.PAGE_SIZE;
     return this.filteredTramites().slice(start, start + this.PAGE_SIZE);
