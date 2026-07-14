@@ -39,6 +39,17 @@ export interface Comentario {
   fecha: string;
 }
 
+export interface DocumentoVersion {
+  id: string;
+  version: number;
+  url: string;
+  s3Key: string;
+  size: number;
+  editadoPor: string;
+  fechaEdicion: string;
+  comentario: string;
+}
+
 export interface Documento {
   id: string;
   nombre: string;
@@ -48,6 +59,8 @@ export interface Documento {
   subidoPor?: string;
   tramiteId?: string;
   fechaSubida?: string;
+  versionActual?: number;
+  versiones?: DocumentoVersion[];
 }
 
 export interface Politica {

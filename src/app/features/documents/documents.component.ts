@@ -1,35 +1,29 @@
-import { Component, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface DocFile {
-  id: string;
-  name: string;
-  category: string;
-  owner: string;
-  ownerInitials: string;
-  ownerColor: string;
-  modified: string;
-  size: string;
-  icon: string;
-  iconColor: string;
-  url?: string;
-}
-
-const COLORS = ['#8b4b5a','#5d6237','#2e7d8c','#c4748a','#7b5ea7','#4a7c59'];
+import { DocumentosService } from '../../core/services/documentos.service';
+import { AuthService } from '../../core/services/auth.service';
+import { Documento } from '../../core/models/api.models';
+import { DocumentViewerComponent } from './viewer/document-viewer.component';
 
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DocumentViewerComponent],
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.scss'
 })
-export class DocumentsComponent {
+export class DocumentsComponent implements OnInit {
   @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
 
-  viewMode = signal<'grid' | 'list'>('list');
+  private documentosService = inject(DocumentosService);
+  private authService = inject(AuthService);
 
+  viewMode = signal<'grid' | 'list'>('list');
+  filesList = signal<Documento[]>([]);
+  loading = signal(true);
+
+  // Categorías estáticas para decoración de la vista
   categories = [
     { id: 'facturas',         label: 'Facturas',         count: 248, size: '1.2 GB', icon: 'receipt_long', color: '#5d6237' },
     { id: 'contratos',        label: 'Contratos',        count: 52,  size: '450 MB', icon: 'description',  color: '#c4748a' },
@@ -37,32 +31,35 @@ export class DocumentsComponent {
     { id: 'otros',            label: 'Otros',            count: 89,  size: '2.4 GB', icon: 'folder',       color: '#8b4b5a' },
   ];
 
-  filesList = signal<DocFile[]>([
-    { id: '1', name: 'Contrato_Alquiler_2024.pdf',  category: 'Contratos',       owner: 'Juan Díaz',    ownerInitials: 'JD', ownerColor: '#c4748a', modified: 'Hace 2 horas', size: '4.2 MB',  icon: 'picture_as_pdf', iconColor: '#c4748a' },
-    { id: '2', name: 'Factura_Servicios_May.docx',  category: 'Facturas',        owner: 'Marta Miró',   ownerInitials: 'MM', ownerColor: '#5d6237', modified: 'Ayer, 15:30',  size: '850 KB',  icon: 'article',        iconColor: '#5d6237' },
-    { id: '3', name: 'DNI_Titular_Front.jpg',       category: 'Identificaciones',owner: 'Ricardo Soler',ownerInitials: 'RS', ownerColor: '#8b4b5a', modified: '25 May 2024',  size: '2.1 MB',  icon: 'image',          iconColor: '#5d5f5f' },
-    { id: '4', name: 'Contrato_Servicios_2024.pdf', category: 'Contratos',       owner: 'Ana Pérez',    ownerInitials: 'AP', ownerColor: '#7b5ea7', modified: '22 May 2024',  size: '1.8 MB',  icon: 'picture_as_pdf', iconColor: '#c4748a' },
-    { id: '5', name: 'Factura_Abril_2024.pdf',      category: 'Facturas',        owner: 'Luis Torres',  ownerInitials: 'LT', ownerColor: '#2e7d8c', modified: '18 May 2024',  size: '320 KB',  icon: 'picture_as_pdf', iconColor: '#c4748a' },
-  ]);
-
-  // Modal state
+  // Modal y visor
   showUploadModal  = signal(false);
-  showEditModal    = signal(false);
-  showShareModal   = signal(false);
   showDeleteConfirm = signal<string | null>(null);
-  shareCopied      = signal(false);
-  selectedFile     = signal<DocFile | null>(null);
-  private nextId   = 100;
+  selectedDocumentoId = signal<string | null>(null);
 
-  uploadForm = { name: '', category: 'Contratos', owner: '', size: '', selectedFile: null as File | null };
-  editForm: Partial<DocFile> = {};
+  uploadForm = { name: '', category: 'Contratos', selectedFile: null as File | null };
 
-  readonly categoryOptions = ['Facturas', 'Contratos', 'Identificaciones', 'Otros'];
+  ngOnInit(): void {
+    this.cargarLista();
+  }
+
+  cargarLista(): void {
+    this.loading.set(true);
+    this.documentosService.listarTodos().subscribe({
+      next: (docs) => {
+        this.filesList.set(docs || []);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error al listar documentos:', err);
+        this.loading.set(false);
+      }
+    });
+  }
 
   // ── Upload ───────────────────────────────────────────
 
   triggerUpload(): void {
-    this.uploadForm = { name: '', category: 'Contratos', owner: '', size: '', selectedFile: null };
+    this.uploadForm = { name: '', category: 'Contratos', selectedFile: null };
     this.showUploadModal.set(true);
   }
 
@@ -72,78 +69,44 @@ export class DocumentsComponent {
     if (!file) return;
     this.uploadForm.selectedFile = file;
     this.uploadForm.name = file.name;
-    this.uploadForm.size = this.formatBytes(file.size);
   }
 
   submitUpload(): void {
-    if (!this.uploadForm.name.trim()) return;
-    const initials = (this.uploadForm.owner || 'Yo').trim().split(' ').slice(0, 2).map(w => w[0].toUpperCase()).join('') || 'YO';
-    const color = COLORS[this.nextId % COLORS.length];
-    const ext = this.uploadForm.name.split('.').pop()?.toLowerCase() ?? '';
-    const icon = ext === 'pdf' ? 'picture_as_pdf' : ['jpg','jpeg','png','gif'].includes(ext) ? 'image' : 'article';
-    const iconColor = ext === 'pdf' ? '#c4748a' : ['jpg','jpeg','png'].includes(ext) ? '#5d5f5f' : '#5d6237';
-    const url = this.uploadForm.selectedFile ? URL.createObjectURL(this.uploadForm.selectedFile) : undefined;
-
-    const f: DocFile = {
-      id:           `${this.nextId++}`,
-      name:         this.uploadForm.name,
-      category:     this.uploadForm.category,
-      owner:        this.uploadForm.owner || 'Yo',
-      ownerInitials: initials,
-      ownerColor:   color,
-      modified:     'Ahora mismo',
-      size:         this.uploadForm.size || '—',
-      icon, iconColor, url,
-    };
-    this.filesList.update(list => [f, ...list]);
-    this.showUploadModal.set(false);
+    if (!this.uploadForm.selectedFile || !this.uploadForm.name.trim()) return;
+    
+    this.loading.set(true);
+    this.documentosService.subirDocumento(this.uploadForm.selectedFile).subscribe({
+      next: (doc) => {
+        this.showUploadModal.set(false);
+        this.cargarLista();
+      },
+      error: (err) => {
+        console.error('Error al subir documento:', err);
+        this.loading.set(false);
+      }
+    });
   }
 
   // ── Download ─────────────────────────────────────────
 
-  downloadFile(file: DocFile): void {
-    if (file.url) {
-      const a = document.createElement('a');
-      a.href = file.url; a.download = file.name; a.click();
-    } else {
-      // Simulated download: create a placeholder text blob
-      const blob = new Blob([`Archivo: ${file.name}\nCategoría: ${file.category}\nPropietario: ${file.owner}`], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = file.name; a.click();
-      URL.revokeObjectURL(url);
-    }
+  downloadFile(file: Documento): void {
+    this.documentosService.downloadDocumento(file.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.nombre;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: (err) => console.error('Error descargando archivo:', err)
+    });
   }
 
-  // ── Share ────────────────────────────────────────────
+  // ── Visor Inline ─────────────────────────────────────
 
-  openShare(file: DocFile): void {
-    this.selectedFile.set(file);
-    this.shareCopied.set(false);
-    this.showShareModal.set(true);
-  }
-
-  copyShareLink(): void {
-    const link = `https://tramiteflow.app/doc/${this.selectedFile()?.id}`;
-    navigator.clipboard.writeText(link).catch(() => {});
-    this.shareCopied.set(true);
-    setTimeout(() => this.shareCopied.set(false), 2000);
-  }
-
-  // ── Edit ─────────────────────────────────────────────
-
-  openEdit(file: DocFile): void {
-    this.editForm = { ...file };
-    this.selectedFile.set(file);
-    this.showEditModal.set(true);
-  }
-
-  submitEdit(): void {
-    if (!this.editForm.name?.trim()) return;
-    this.filesList.update(list =>
-      list.map(f => f.id === this.editForm.id ? { ...f, ...this.editForm, modified: 'Ahora mismo' } as DocFile : f)
-    );
-    this.showEditModal.set(false);
+  openViewer(file: Documento): void {
+    this.selectedDocumentoId.set(file.id);
   }
 
   // ── Delete ───────────────────────────────────────────
@@ -153,19 +116,52 @@ export class DocumentsComponent {
 
   confirmDelete(): void {
     const id = this.showDeleteConfirm();
-    if (id) this.filesList.update(list => list.filter(f => f.id !== id));
-    this.showDeleteConfirm.set(null);
+    if (!id) return;
+
+    this.loading.set(true);
+    this.documentosService.eliminarDocumento(id).subscribe({
+      next: () => {
+        this.showDeleteConfirm.set(null);
+        this.cargarLista();
+      },
+      error: (err) => {
+        console.error('Error eliminando documento:', err);
+        this.loading.set(false);
+      }
+    });
   }
 
   // ── Helpers ──────────────────────────────────────────
 
-  private formatBytes(bytes: number): string {
+  formatBytes(bytes?: number): string {
+    if (!bytes) return '—';
     if (bytes < 1024)        return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
-  fileToDelete(id: string | null): DocFile | undefined {
+  fileToDelete(id: string | null): Documento | undefined {
     return id ? this.filesList().find(f => f.id === id) : undefined;
+  }
+
+  esDocx(file: Documento): boolean {
+    const ext = file.nombre.split('.').pop()?.toLowerCase();
+    return ext === 'docx' || ext === 'doc';
+  }
+
+  getIcon(file: Documento): string {
+    const ext = file.nombre.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return 'picture_as_pdf';
+    if (['jpg','jpeg','png','gif','svg'].includes(ext || '')) return 'image';
+    if (ext === 'docx' || ext === 'doc') return 'description';
+    return 'draft';
+  }
+
+  getIconColor(file: Documento): string {
+    const ext = file.nombre.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return '#c4748a';
+    if (['jpg','jpeg','png'].includes(ext || '')) return '#2e7d8c';
+    if (ext === 'docx' || ext === 'doc') return '#4a7c59';
+    return '#8b4b5a';
   }
 }
