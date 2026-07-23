@@ -15,30 +15,34 @@
       </div>
 
       <!-- Real-Time Collaborative Editors Info -->
-      <div class="collaborators-info" *ngIf="colaboradores().length > 0">
-        <div class="collaborator-avatars">
-          @for (c of colaboradores(); track c) {
-          <span class="collab-avatar" [title]="c">
-            {{ c.substring(0, 2).toUpperCase() }}
-          </span>
-          }
+      @if (colaboradores().length > 0) {
+        <div class="collaborators-info">
+          <div class="collaborator-avatars">
+            @for (c of colaboradores(); track c) {
+              <span class="collab-avatar" [title]="c">
+                {{ c.substring(0, 2).toUpperCase() }}
+              </span>
+            }
+          </div>
+          <span class="collab-label">{{ colaboradores().length }} editando ahora</span>
         </div>
-        <span class="collab-label">{{ colaboradores().length }} editando ahora</span>
-      </div>
+      }
 
       <!-- Action items -->
       <div class="viewer-actions">
         <!-- Status log text -->
-        <span class="status-alert" *ngIf="statusTexto()">
-          <span class="material-symbols-outlined status-spinner">sync</span>
-          {{ statusTexto() }}
-        </span>
+        @if (statusTexto()) {
+          <span class="status-alert">
+            <span class="material-symbols-outlined status-spinner">sync</span>
+            {{ statusTexto() }}
+          </span>
+        }
 
         @if (esDocx() && permiso() === 'edit') {
-        <button class="btn-save" (click)="guardarVersion()" [disabled]="saving()">
-          <span class="material-symbols-outlined">{{ saving() ? 'progress_activity' : 'cloud_upload' }}</span>
-          {{ saving() ? 'Guardando...' : 'Guardar Versión' }}
-        </button>
+          <button class="btn-save" (click)="guardarVersion()" [disabled]="saving()">
+            <span class="material-symbols-outlined">{{ saving() ? 'progress_activity' : 'cloud_upload' }}</span>
+            {{ saving() ? 'Guardando...' : 'Guardar Versión' }}
+          </button>
         }
 
         <button class="btn-download" (click)="descargar()">
@@ -56,77 +60,85 @@
 
       <!-- Overlay Loader -->
       @if (loading()) {
-      <div class="viewer-loader-overlay">
-        <div class="viewer-loader">
-          <span class="material-symbols-outlined spin">progress_activity</span>
-          <p>Descargando archivo y preparando entorno...</p>
+        <div class="viewer-loader-overlay">
+          <div class="viewer-loader">
+            <span class="material-symbols-outlined spin">progress_activity</span>
+            <p>Descargando archivo y preparando entorno...</p>
+          </div>
         </div>
-      </div>
       }
 
       <!-- Viewer Content Area -->
       <div class="viewer-content">
-        @if (esDocx()) {
-        <div class="editor-container-wrapper">
-          <ejs-documenteditorcontainer #documenteditor [enableToolbar]="true" height="100%" width="100%"
-            serviceUrl="/api/document-editor/" (created)="onEditorCreated()">
-          </ejs-documenteditorcontainer>
-        </div>
-        } @else if (esPdf()) {
-        <div class="pdf-viewer" *ngIf="!loading()">
-          <iframe [src]="pdfUrl" width="100%" height="100%"></iframe>
-        </div>
-        } @else if (esImagen()) {
-        <div class="image-viewer" *ngIf="!loading()">
-          <img [src]="documento?.url" alt="Visor de Imagen" class="preview-img" />
-        </div>
-        } @else {
-        <div class="fallback-viewer" *ngIf="!loading()">
-          <span class="material-symbols-outlined fallback-icon">draft</span>
-          <p>Este formato ({{ documento?.tipo }}) no tiene soporte de previsualización en línea.</p>
-          <button class="btn-primary" (click)="descargar()">
-            <span class="material-symbols-outlined">download</span>
-            Descargar para abrir localmente
-          </button>
-        </div>
+        @if (!loading()) {
+          @if (esDocx()) {
+            <div class="editor-container-wrapper">
+              <ejs-documenteditorcontainer #documenteditor [enableToolbar]="true" height="100%" width="100%"
+                serviceUrl="/api/document-editor/" (created)="onEditorCreated()">
+              </ejs-documenteditorcontainer>
+            </div>
+          } @else if (esPdf()) {
+            <div class="pdf-viewer">
+              <iframe [src]="pdfUrl" width="100%" height="100%" style="border: none;"></iframe>
+            </div>
+          } @else if (esImagen()) {
+            <div class="image-viewer">
+              <img [src]="documento?.url" alt="Visor de Imagen" class="preview-img" />
+            </div>
+          } @else {
+            <div class="fallback-viewer">
+              <span class="material-symbols-outlined fallback-icon">draft</span>
+              <p>Este formato ({{ documento?.tipo }}) no tiene soporte de previsualización en línea.</p>
+              <button class="btn-primary" (click)="descargar()">
+                <span class="material-symbols-outlined">download</span>
+                Descargar para abrir localmente
+              </button>
+            </div>
+          }
         }
       </div>
 
       <!-- Sidebar: Versions History Control -->
-      <div class="versions-sidebar" *ngIf="documento">
-        <div class="sidebar-header">
-          <span class="material-symbols-outlined">history</span>
-          <h4>Historial de Versiones</h4>
-        </div>
-
-        <div class="versions-list">
-          @for (v of versionesOrdenadas; track v.id) {
-          <div class="version-item" [class.version-item--active]="v.version === documento?.versionActual">
-            <div class="version-badge-container">
-              <span class="version-badge">v{{ v.version }}</span>
-              <span class="version-active-tag" *ngIf="v.version === documento?.versionActual">Activo</span>
-            </div>
-            <p class="version-comment">"{{ v.comentario }}"</p>
-            <div class="version-meta">
-              <span>Autor: <strong>{{ v.editadoPor }}</strong></span>
-              <span>{{ v.fechaEdicion | date:'dd/MM/yyyy HH:mm' }}</span>
-            </div>
-
-            <div class="version-item-actions">
-              <button class="btn-action-sm" (click)="descargarVersion(v)" title="Descargar esta versión">
-                <span class="material-symbols-outlined">download</span>
-              </button>
-              <button class="btn-action-sm btn-restore-sm"
-                *ngIf="v.version !== documento?.versionActual && permiso() === 'edit'" (click)="restaurarVersion(v)"
-                title="Restaurar a esta versión">
-                <span class="material-symbols-outlined">settings_backup_restore</span>
-                Restaurar
-              </button>
-            </div>
+      @if (documento) {
+        <div class="versions-sidebar">
+          <div class="sidebar-header">
+            <span class="material-symbols-outlined">history</span>
+            <h4>Historial de Versiones</h4>
           </div>
-          }
+
+          <div class="versions-list">
+            @for (v of versionesOrdenadas; track v.id) {
+              <div class="version-item" [class.version-item--active]="v.version === documento?.versionActual">
+                <div class="version-badge-container">
+                  <span class="version-badge">v{{ v.version }}</span>
+                  @if (v.version === documento?.versionActual) {
+                    <span class="version-active-tag">Activo</span>
+                  }
+                </div>
+                <p class="version-comment">"{{ v.comentario }}"</p>
+                <div class="version-meta">
+                  <span>Autor: <strong>{{ v.editadoPor }}</strong></span>
+                  <span>{{ v.fechaEdicion | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+
+                <div class="version-item-actions">
+                  <button class="btn-action-sm" (click)="descargarVersion(v)" title="Descargar esta versión">
+                    <span class="material-symbols-outlined">download</span>
+                  </button>
+                  @if (v.version !== documento?.versionActual && permiso() === 'edit') {
+                    <button class="btn-action-sm btn-restore-sm"
+                      (click)="restaurarVersion(v)"
+                      title="Restaurar a esta versión">
+                      <span class="material-symbols-outlined">settings_backup_restore</span>
+                      Restaurar
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
         </div>
-      </div>
+      }
 
     </div>
   </div>
